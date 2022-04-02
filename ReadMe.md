@@ -35,7 +35,7 @@ interface IERC4964 {
 
 ## Request for Comment
 
-EIP-4964 has not yet begun the EIP process. Everything is open for feedback, and all feedback is appreciated! Please dm me (@0xalxi)[https://twitter.com/0xalxi] or find me on discord.
+EIP-4964 has not yet begun the EIP process. Everything is open for feedback, and all feedback is appreciated! Please dm me [@0xalxi](https://twitter.com/0xalxi) or find me on discord.
 
 A few questions that are currently being discussed:
 
