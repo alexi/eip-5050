@@ -1,8 +1,8 @@
-# EIP-4964: Action Protocol
+# EIP-xxxx: Action Protocol
 
-This is a work-in-progress reference implementation of the upcoming EIP-4964.
+This is a work-in-progress reference implementation of the upcoming Action Protocol EIP.
 
-EIP-4964 enables users, ERC-721s, and other tokens to interact with each other, and with shared `State` contracts via `Actions`.
+The Action Protocol enables users, ERC-721s, and other tokens to interact with each other, and with shared `State` contracts via `Actions`.
 
 **Actions** are arbitrary strings, and structured to allow any combination of sender (`fromContract`), receiver (`to`), and `state` contract.
 
@@ -35,13 +35,13 @@ interface IERC4964 {
 
 ## Request for Comment
 
-EIP-4964 has not yet begun the EIP process. Everything is open for feedback, and all feedback is appreciated! Please dm me [@0xalxi](https://twitter.com/0xalxi) or find me on discord.
+The Action Protocol is just beginning the EIP process. Everything is open for feedback, and all feedback is appreciated! Please dm me [@0xalxi](https://twitter.com/0xalxi) or find me on discord.
 
 A few questions that are currently being discussed:
 
 ### Bridging
 
-Gas costs on mainnet are game-breakingly expensive, and most Metaverse games are being built on L2s and alternative L1s. While bridging is probably out of scope for EIP-4964, we should make sure that bridging can be done without additional callbacks or multiple transactions.
+Gas costs on mainnet are game-breakingly expensive, and most Metaverse games are being built on L2s and alternative L1s. While bridging is probably out of scope for this EIP, we should make sure that bridging can be done without additional callbacks or multiple transactions.
 
 We should support: 
 
