@@ -19,7 +19,7 @@ struct Action {
     uint256 _hash;
 }
 
-interface IERC4964 {
+interface IERCxxxx {
     // Commit actions via the `fromContract`
     function commitAction(Action memory action) external payable;
 
@@ -38,6 +38,10 @@ interface IERC4964 {
 The Action Protocol is just beginning the EIP process. Everything is open for feedback, and all feedback is appreciated! Please dm me [@0xalxi](https://twitter.com/0xalxi) or find me on discord.
 
 A few questions that are currently being discussed:
+
+### Action Strings
+
+Should actions be strings? Solidity does not have good strings support, and essentially every contract will need an if/switch statement to route action handlers.
 
 ### Bridging
 

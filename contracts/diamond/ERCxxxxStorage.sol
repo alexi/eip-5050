@@ -3,14 +3,14 @@ pragma solidity ^0.8.0;
 
 /**********************************************************\
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-4964 Metaverse Protocol: [tbd]
+* EIP-xxxx Metaverse Protocol: [tbd]
 /**********************************************************/
 
-import {Action} from "../interfaces/IERC4964.sol";
+import {Action} from "../interfaces/IERCxxxx.sol";
 
-library ERC4964Storage {
-    bytes32 constant ERC_4964_STORAGE_POSITION =
-        keccak256("erc4964.interaction.location");
+library ERCxxxxStorage {
+    bytes32 constant ERC_xxxx_STORAGE_POSITION =
+        keccak256("ercxxxx.interaction.location");
 
     struct Layout {
         mapping(uint256 => bool) verified;
@@ -20,7 +20,7 @@ library ERC4964Storage {
     }
 
     function layout() internal pure returns (Layout storage es) {
-        bytes32 position = ERC_4964_STORAGE_POSITION;
+        bytes32 position = ERC_xxxx_STORAGE_POSITION;
         assembly {
             es.slot := position
         }

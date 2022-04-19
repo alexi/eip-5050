@@ -2,11 +2,11 @@ pragma solidity ^0.8.0;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import "../interfaces/IERC4964.sol";
+import "../interfaces/IERCxxxx.sol";
 import "./Controllable.sol";
 import "./Approvable.sol";
 
-contract ERC4964 is Approvable, Controllable, IERC4964 {
+contract ERCxxxx is Approvable, Controllable, IERCxxxx {
     using Address for address;
     mapping(uint256 => bool) private _verified;
     uint256 private _nonce;
@@ -55,7 +55,7 @@ contract ERC4964 is Approvable, Controllable, IERC4964 {
         }
         if (next.isContract()) {
             try
-                IERC4964Receiver(next).handleAction{value: msg.value}(action)
+                IERCxxxxReceiver(next).handleAction{value: msg.value}(action)
             {} catch Error(string memory err) {
                 revert(err);
             } catch (bytes memory returnData) {
@@ -81,11 +81,11 @@ contract ERC4964 is Approvable, Controllable, IERC4964 {
         if (_isApprovedController(msg.sender, action.name)) {
             return;
         }
-        require(bytes(action.name).length > 0, "ERC4964: empty action name");
+        require(bytes(action.name).length > 0, "ERCxxxx: empty action name");
         if (msg.sender != action.from) {
             require(
                 _isApproved(action.from, msg.sender, action.name),
-                "ERC4964: unapproved sender"
+                "ERCxxxx: unapproved sender"
             );
         }
         _;
@@ -95,35 +95,35 @@ contract ERC4964 is Approvable, Controllable, IERC4964 {
         if (_isApprovedController(msg.sender, action.name)) {
             return;
         }
-        require(bytes(action.name).length > 0, "ERC4964: empty action name");
+        require(bytes(action.name).length > 0, "ERCxxxx: empty action name");
         if (action.to == address(this)) {
             require(
                 action.fromContract == address(0) ||
                     action.fromContract == msg.sender,
-                "ERC4964: invalid sender"
+                "ERCxxxx: invalid sender"
             );
             require(
                 action.fromContract != address(0) || action.from == msg.sender,
-                "ERC4964: invalid sender"
+                "ERCxxxx: invalid sender"
             );
         } else if (action.state == address(this)) {
-            require(action.state == address(this), "ERC4964: invalid state");
+            require(action.state == address(this), "ERCxxxx: invalid state");
             require(
                 action.to == address(0) || action.to == msg.sender,
-                "ERC4964: invalid sender"
+                "ERCxxxx: invalid sender"
             );
             require(
                 action.fromContract == address(0) || action.to == msg.sender,
-                "ERC4964: invalid sender"
+                "ERCxxxx: invalid sender"
             );
             if (action.to.isContract() && action.fromContract.isContract()) {
                 try
-                    IERC4964(action.fromContract).validateAction(action._hash)
+                    IERCxxxx(action.fromContract).validateAction(action._hash)
                 returns (bool ok) {
-                    require(ok, "ERC4964: action not validated");
+                    require(ok, "ERCxxxx: action not validated");
                 } catch (bytes memory reason) {
                     if (reason.length == 0) {
-                        revert("ERC4964: call to non ERC4964 implementer");
+                        revert("ERCxxxx: call to non ERCxxxx implementer");
                     } else {
                         assembly {
                             revert(add(32, reason), mload(reason))
@@ -159,15 +159,15 @@ contract ERC4964 is Approvable, Controllable, IERC4964 {
         }
         if (action.to == address(this)) {
             if (action.state != address(0)) {
-                require(action.state.isContract(), "ERC4964: invalid state");
+                require(action.state.isContract(), "ERCxxxx: invalid state");
                 try
-                    IERC4964Receiver(action.state).handleAction{
+                    IERCxxxxReceiver(action.state).handleAction{
                         value: msg.value
                     }(action)
                 {} catch (bytes memory reason) {
                     if (reason.length == 0) {
                         revert(
-                            "ERC4964: call to non ERC4964Receiver implementer"
+                            "ERCxxxx: call to non ERCxxxxReceiver implementer"
                         );
                     } else {
                         assembly {

@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "./ERC4964.sol";
+import "./ERCxxxx.sol";
 import "./State.sol";
 
 interface IStateExample {
@@ -14,7 +14,7 @@ interface IStateExample {
         returns (uint256);
 }
 
-contract Sender is ERC4964 {
+contract Sender is ERCxxxx {
     uint256 public numSuccessfulSends;
 
     function commitAction(Action memory action)
@@ -39,7 +39,7 @@ contract Sender is ERC4964 {
     }
 }
 
-contract Receiver is ERC4964 {
+contract Receiver is ERCxxxx {
     uint256 public numSuccessfulReceives;
 
     function handleAction(Action memory action)
@@ -68,7 +68,7 @@ contract Receiver is ERC4964 {
     }
 }
 
-contract State is ERC4964State {
+contract State is ERCxxxxState {
     mapping(address => mapping(uint256 => uint256)) tokenStrengths;
 
     constructor() {}
