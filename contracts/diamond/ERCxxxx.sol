@@ -174,15 +174,15 @@ contract ERCxxxx is IERCxxxx, IApprovable, IControllable {
             // Handle as state contract
             if (action.fromContract.isContract()) {}
         }
-        emit ActionTx(
+        emit CommitAction(
             action.name,
             action.from,
             action.fromContract,
             action.tokenId,
             action.to,
             action.toTokenId,
-            action.ext,
-            action.state
+            action.state,
+            action.data
         );
     }
 

@@ -13,6 +13,7 @@ pragma solidity ^0.8.0;
 /// @param to The address of the receiving wallet or contract
 /// @param toTokenId Optional ID of the receiving token
 /// @param state The state contract
+/// @param nonce A nonce used by the `state` contract for validation
 /// @param data Additional data with no specified format
 struct Action {
     string name;
@@ -22,6 +23,7 @@ struct Action {
     address to;
     uint256 toTokenId;
     address state;
+    uint256 nonce;
     bytes data;
 }
 
@@ -105,14 +107,16 @@ interface IERCxxxx {
     /// @param action The action to handle
     function handleAction(Action calldata action) external payable;
 
-    /// @notice Get the initiating contract's stored hash value
+    /// @notice Check if an action is valid based on its hash and nonce
     /// @dev When an action passes through all three possible contracts
     /// (`fromContract`, `to`, and `state`) the `state` contract validates the
     /// action with the initating `fromContract` using a nonced action hash.
-    /// This hash is saved to storage on the `fromContract` before it calls
-    /// `handleAction()` on the receiver. The `state` contract retrieves this hash
-    /// and checks it
-    function getHash() external returns (uint256);
+    /// This hash is calculated and saved to storage on the `fromContract` before
+    /// action handling is initiated. The `state` contract calculates the hash
+    /// and verifies it and nonce with the `fromContract`.
+    /// @param _hash The hash to validate
+    /// @param _nonce The nonce to validate
+    function isValid(uint256 _hash, uint256 _nonce) external returns (bool);
 
     /// @dev This emits when an action is sent (`commitAction()`)
     event CommitAction(
