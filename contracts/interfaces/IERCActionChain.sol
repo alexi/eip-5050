@@ -6,6 +6,12 @@ pragma solidity ^0.8.0;
 * EIP-xxxx Metaverse Protocol: [tbd]
 /**********************************************************/
 
+struct Node {
+    address _address;
+    uint256 _tokenId;
+}
+
+/// @dev This emits when an action is sent (`commitAction()`)
 /// @param name The name of the action
 /// @param from The address of the sender
 /// @param fromContract The address of the sender
@@ -17,15 +23,12 @@ pragma solidity ^0.8.0;
 struct Action {
     string name;
     address from;
-    address fromContract;
-    uint256 tokenId;
-    address to;
-    uint256 toTokenId;
+    Node[] chain;
     address state;
     bytes data;
 }
 
-contract Test {
+contract ChainTest {
     Action currentAction;
     uint256 nonce;
 
@@ -44,12 +47,15 @@ contract Test {
     function handleAction(Action calldata action) external payable {
         // MUST be initiated by user
         require(action.from == msg.sender);
-        require(action.fromContract == address(0));
-        if (action.to == address(this)) {
-            currentAction = action;
-        } else {
-            require(action.state == address(this));
-        }
+        require(action.chain[0]._address == address(0));
+
+        // require(action.chain.last() == msg.sender)
+        // if (action.chain.next().isContract()){
+        //      pass to next
+        // } else if (action.state.isContract()) {
+        //     pass to state
+        // }
+
         // do handling
         // action.next.handleAction(address(this))
         delete currentAction;
@@ -83,7 +89,7 @@ contract Test {
     }
 }
 
-interface IERCxxxx {
+interface IERCActionChain {
     /// @notice Send an action to the target address
     /// @dev The action's `fromContract` is automatically set to `address(this)`,
     /// and the `from` parameter is set to `msg.sender`.
@@ -99,19 +105,13 @@ interface IERCxxxx {
         external
         payable;
 
-    /// @notice Handle an action
-    /// @dev Both the `to` contract and `state` contract are called via
-    /// `handleAction()`. This means that `state` and `to` must be different.
-    /// @param action The action to handle
-    function handleAction(Action calldata action) external payable;
-
     /// @notice Get the initiating contract's stored hash value
-    /// @dev When an action passes through all three possible contracts
-    /// (`fromContract`, `to`, and `state`) the `state` contract validates the
-    /// action with the initating `fromContract` using a nonced action hash.
-    /// This hash is saved to storage on the `fromContract` before it calls
-    /// `handleAction()` on the receiver. The `state` contract retrieves this hash
-    /// and checks it
+    /// @dev State contracts need to validate the `fromContract`
+    /// when called by the `to` contract (`msg.sender == action.to`). When
+    /// both `to` and `state` are set to contract addresses, the sending contract
+    /// (`fromContract`) sets a nonce, which is then sending `fromContract`
+    /// sets a nonce in `storage`, and includes it in `action._nonce`. The
+    /// state contract calls `validateAction(action._nonce)`.
     function getHash() external returns (uint256);
 
     /// @dev This emits when an action is sent (`commitAction()`)
@@ -137,8 +137,4 @@ interface IERCxxxx {
         address _state,
         bytes _data
     );
-}
-
-interface IERCxxxxReceiver {
-    function handleAction(Action memory action) external payable;
 }
