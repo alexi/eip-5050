@@ -315,12 +315,6 @@ The specifics of state contract interfaces are outside the scope of this standar
 
 Actions are identified with arbitrary strings. Strings are easy to use because they are human-readable. The trade-off compared with an action ID registry model is in space and gas efficiency, and strict uniqueness.
 
-### NFT Identifiers
-
-Every NFT is identified by a unique `uint256` ID inside the ERC-721 smart contract. This identifying number SHALL NOT change for the life of the contract. The pair `(contract address, uint256 tokenId)` will then be a globally unique and fully-qualified identifier for a specific asset on an Ethereum chain. While some ERC-721 smart contracts may find it convenient to start with ID 0 and simply increment by one for each new NFT, callers SHALL NOT assume that ID numbers have any specific pattern to them, and MUST treat the ID as a "black box". Also note that NFTs MAY become invalid (be destroyed). Please see the enumeration functions for a supported enumeration interface.
-
-The choice of `uint256` allows a wide variety of applications because UUIDs and sha3 hashes are directly convertible to `uint256`.
-
 ### Gas and Complexity (regarding action chaining)
 
 Action handling within each contract can be arbitrarily complex, and there is no way to eliminate the possibility that certain contract interactions will run out of gas. However, develoeprs SHOULD make every effort to minimize gas usage in their action handler methods, and avoid the use of for-loops.
