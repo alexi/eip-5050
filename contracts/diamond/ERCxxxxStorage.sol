@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 /**********************************************************\
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Metaverse Protocol: [tbd]
+* EIP-xxxx Token Interaction Standard: [tbd]
+*
+* Implementation of an interactive token protocol.
 /**********************************************************/
 
 import {Action} from "../interfaces/IERCxxxx.sol";
@@ -13,9 +15,10 @@ library ERCxxxxStorage {
         keccak256("ercxxxx.interaction.location");
 
     struct Layout {
-        mapping(uint256 => bool) verified;
+        uint256 hash;
         uint256 nonce;
-        mapping(address => mapping(address => mapping(string => bool))) approvals;
+        mapping(address => mapping(string => address)) actionApprovals;
+        mapping(address => mapping(address => bool)) operatorApprovals;
         mapping(address => mapping(string => bool)) controllers;
     }
 
@@ -26,26 +29,34 @@ library ERCxxxxStorage {
         }
     }
 
-    function receipt(Layout storage l, Action memory action)
+    function hashAndGetNonce(Layout storage l, Action memory action)
         internal
-        returns (uint256 _hash)
+        returns (uint256)
     {
-        _hash = uint256(
+        ++l.nonce;
+        l.hash = uint256(
             keccak256(
                 abi.encodePacked(
                     action.name,
-                    action.from,
-                    action.fromContract,
-                    action.tokenId,
-                    action.to,
-                    action.toTokenId,
-                    action.ext,
+                    action.user,
+                    action.from._address,
+                    action.from._tokenId,
+                    action.to._address,
+                    action.to._tokenId,
                     action.state,
+                    action.data,
                     l.nonce
                 )
             )
         );
-        ++l.nonce;
-        l.verified[_hash] = true;
+        return l.nonce;
+    }
+
+    function isValid(
+        Layout storage l,
+        uint256 _hash,
+        uint256 _nonce
+    ) internal view returns (bool) {
+        return l.hash == _hash && l.nonce == _nonce;
     }
 }

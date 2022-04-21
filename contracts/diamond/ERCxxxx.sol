@@ -3,24 +3,21 @@ pragma solidity ^0.8.0;
 
 /**********************************************************\
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Metaverse Protocol: [tbd]
+* EIP-xxxx Token Interaction Standard: [tbd]
 *
-* Implementation of a metaverse protocol.
+* Implementation of an interactive token protocol.
 /**********************************************************/
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 import {ERCxxxxStorage} from "./ERCxxxxStorage.sol";
-import {IERCxxxx, IERCxxxxReceiver, Action} from "../interfaces/IERCxxxx.sol";
-import {IApprovable} from "../interfaces/IApprovable.sol";
+import {IERCxxxx, Action} from "../interfaces/IERCxxxx.sol";
 import {IControllable} from "../interfaces/IControllable.sol";
 
-contract ERCxxxx is IERCxxxx, IApprovable, IControllable {
+contract ERCxxxx is IERCxxxx, IControllable {
     using ERCxxxxStorage for ERCxxxxStorage.Layout;
     using Address for address;
-
-    event Log(string message);
 
     function commitAction(Action memory action)
         external
@@ -35,21 +32,22 @@ contract ERCxxxx is IERCxxxx, IApprovable, IControllable {
         if (_isApprovedController(msg.sender, action.name)) {
             return;
         }
-        action.fromContract = address(this);
-        bool toIsContract = action.to.isContract();
+        action.from._address = address(this);
+        bool toIsContract = action.to._address.isContract();
         bool stateIsContract = action.state.isContract();
         address next;
         if (toIsContract) {
-            next = action.to;
+            next = action.to._address;
         } else if (stateIsContract) {
             next = action.state;
         }
+        uint256 _nonce;
         if (toIsContract && stateIsContract) {
-            action._hash = ERCxxxxStorage.layout().receipt(action);
+            _nonce = ERCxxxxStorage.layout().hashAndGetNonce(action);
         }
         if (next.isContract()) {
             try
-                IERCxxxxReceiver(next).handleAction{value: msg.value}(action)
+                IERCxxxx(next).handleAction{value: msg.value}(action, _nonce)
             {} catch Error(string memory err) {
                 revert(err);
             } catch (bytes memory returnData) {
@@ -57,36 +55,75 @@ contract ERCxxxx is IERCxxxx, IApprovable, IControllable {
                     revert(string(returnData));
                 }
             }
-            delete ERCxxxxStorage.layout().verified[action._hash];
         }
-        emit ActionTx(
+        emit CommitAction(
             action.name,
-            action.from,
-            action.fromContract,
-            action.tokenId,
-            action.to,
-            action.toTokenId,
-            action.ext,
-            action.state
+            action.user,
+            action.from._address,
+            action.from._tokenId,
+            action.to._address,
+            action.to._tokenId,
+            action.state,
+            action.data
         );
     }
 
-    function validateAction(uint256 _hash)
+    function isValid(uint256 _hash, uint256 _nonce)
         external
         view
-        override
         returns (bool)
     {
-        return ERCxxxxStorage.layout().verified[_hash];
+        return ERCxxxxStorage.layout().isValid(_hash, _nonce);
     }
 
-    function handleAction(Action memory action)
+    function handleAction(Action memory action, uint256 _nonce)
         external
         payable
         virtual
         override
     {
-        _handleAction(action);
+        _handleAction(action, _nonce);
+    }
+
+    function _handleAction(Action memory action, uint256 _nonce)
+        internal
+        virtual
+    {
+        if (_isApprovedController(msg.sender, action.name)) {
+            return;
+        }
+        if (action.to._address == address(this)) {
+            if (action.state != address(0)) {
+                require(action.state.isContract(), "ERCxxxx: invalid state");
+                try
+                    IERCxxxx(action.state).handleAction{value: msg.value}(
+                        action,
+                        _nonce
+                    )
+                {} catch (bytes memory reason) {
+                    if (reason.length == 0) {
+                        revert("ERCxxxx: call to non ERCxxxx implementer");
+                    } else {
+                        assembly {
+                            revert(add(32, reason), mload(reason))
+                        }
+                    }
+                }
+            }
+        } else {
+            // Handle as state contract
+            if (action.from._address.isContract()) {}
+        }
+        emit CommitAction(
+            action.name,
+            action.user,
+            action.from._address,
+            action.from._tokenId,
+            action.to._address,
+            action.to._tokenId,
+            action.state,
+            action.data
+        );
     }
 
     modifier onlyValidCommitAction(Action memory action) {
@@ -94,43 +131,65 @@ contract ERCxxxx is IERCxxxx, IApprovable, IControllable {
             return;
         }
         require(bytes(action.name).length > 0, "ERCxxxx: empty action name");
-        if (msg.sender != action.from) {
-            require(
-                _isApproved(action.from, msg.sender, action.name),
-                "ERCxxxx: unapproved sender"
-            );
-        }
+        require(
+            _isApprovedOrSelf(action.user, action.name),
+            "ERCxxxx: unapproved sender"
+        );
         _;
     }
 
-    modifier onlyValidAction(Action memory action) {
+    modifier onlyValidAction(Action calldata action, uint256 _nonce) {
         if (_isApprovedController(msg.sender, action.name)) {
             return;
         }
         require(bytes(action.name).length > 0, "ERCxxxx: empty action name");
-        if (action.to == address(this)) {
+        if (action.to._address == address(this)) {
             require(
-                action.fromContract == address(0) ||
-                    action.fromContract == msg.sender,
+                action.from._address == address(0) ||
+                    action.from._address == msg.sender,
                 "ERCxxxx: invalid sender"
             );
             require(
-                action.fromContract != address(0) || action.from == msg.sender,
+                action.from._address != address(0) || action.user == msg.sender,
                 "ERCxxxx: invalid sender"
             );
         } else if (action.state == address(this)) {
             require(action.state == address(this), "ERCxxxx: invalid state");
             require(
-                action.to == address(0) || action.to == msg.sender,
+                action.to._address == address(0) ||
+                    action.to._address == msg.sender,
                 "ERCxxxx: invalid sender"
             );
             require(
-                action.fromContract == address(0) || action.to == msg.sender,
+                action.from._address == address(0) ||
+                    action.to._address == msg.sender,
                 "ERCxxxx: invalid sender"
             );
-            if (action.to.isContract() && action.fromContract.isContract()) {
+
+            // State contracts must validate the action with the `from` contract in
+            // the case of a 3-contract chain (`from`, `to` and `state`) all set to
+            // valid contract addresses.
+            if (
+                action.to._address.isContract() &&
+                action.from._address.isContract()
+            ) {
+                uint256 _hash = uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            action.name,
+                            action.user,
+                            action.from._address,
+                            action.from._tokenId,
+                            action.to._address,
+                            action.to._tokenId,
+                            action.state,
+                            action.data,
+                            _nonce
+                        )
+                    )
+                );
                 try
-                    IERCxxxx(action.fromContract).validateAction(action._hash)
+                    IERCxxxx(action.from._address).isValid(_hash, _nonce)
                 returns (bool ok) {
                     require(ok, "ERCxxxx: action not validated");
                 } catch (bytes memory reason) {
@@ -147,84 +206,63 @@ contract ERCxxxx is IERCxxxx, IApprovable, IControllable {
         _;
     }
 
-    function _handleAction(Action memory action) internal virtual {
-        if (_isApprovedController(msg.sender, action.name)) {
-            return;
-        }
-        if (action.to == address(this)) {
-            if (action.state != address(0)) {
-                require(action.state.isContract(), "ERCxxxx: invalid state");
-                try
-                    IERCxxxxReceiver(action.state).handleAction{
-                        value: msg.value
-                    }(action)
-                {} catch (bytes memory reason) {
-                    if (reason.length == 0) {
-                        revert(
-                            "ERCxxxx: call to non ERCxxxxReceiver implementer"
-                        );
-                    } else {
-                        assembly {
-                            revert(add(32, reason), mload(reason))
-                        }
-                    }
-                }
-            }
-        } else {
-            // Handle as state contract
-            if (action.fromContract.isContract()) {}
-        }
-        emit CommitAction(
-            action.name,
-            action.from,
-            action.fromContract,
-            action.tokenId,
-            action.to,
-            action.toTokenId,
-            action.state,
-            action.data
+    function approveForAction(
+        address _account,
+        string memory _action,
+        address _approved
+    ) public virtual override returns (bool) {
+        require(_approved != _account, "ERCxxxx: approve to caller");
+
+        require(
+            msg.sender == _account ||
+                isApprovedForAllActions(_account, msg.sender),
+            "ERCxxxx: approve caller is not account nor approved for all"
         );
-    }
 
-    function approve(
-        address from,
-        address sender,
-        string memory action
-    ) external virtual override returns (bool) {
-        ERCxxxxStorage.layout().approvals[from][sender][action] = true;
+        ERCxxxxStorage.layout().actionApprovals[_account][_action] = _approved;
+        emit ApprovalForAction(_account, _action, _approved);
+
         return true;
     }
 
-    function revoke(
-        address from,
-        address sender,
-        string memory action
-    ) external virtual override returns (bool) {
-        delete ERCxxxxStorage.layout().approvals[from][sender][action];
-        return true;
+    function setApprovalForAllActions(address _operator, bool _approved)
+        public
+        virtual
+        override
+    {
+        require(msg.sender != _operator, "ERCxxxx: approve to caller");
+
+        ERCxxxxStorage.layout().operatorApprovals[msg.sender][
+            _operator
+        ] = _approved;
+
+        emit ApprovalForAllActions(msg.sender, _operator, _approved);
     }
 
-    function isApproved(
-        address from,
-        address sender,
-        string memory action
-    ) external view returns (bool) {
-        return _isApproved(from, sender, action);
+    function getApprovedForAction(address _account, string memory _action)
+        public
+        view
+        returns (address)
+    {
+        return ERCxxxxStorage.layout().actionApprovals[_account][_action];
     }
 
-    function _isApproved(
-        address from,
-        address sender,
-        string memory action
-    ) internal view returns (bool) {
-        ERCxxxxStorage.Layout storage es = ERCxxxxStorage.layout();
-        if (es.approvals[from][sender][action]) {
-            return true;
-        }
-        if (es.approvals[from][sender][""]) {
-            return true;
-        }
-        return false;
+    function isApprovedForAllActions(address _account, address _operator)
+        public
+        view
+        returns (bool)
+    {
+        return ERCxxxxStorage.layout().operatorApprovals[_account][_operator];
+    }
+
+    function _isApprovedOrSelf(address account, string memory action)
+        internal
+        view
+        returns (bool)
+    {
+        return (msg.sender == account ||
+            isApprovedForAllActions(account, msg.sender) ||
+            getApprovedForAction(account, action) == msg.sender);
     }
 
     function approveController(address sender, string memory action)

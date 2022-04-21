@@ -2,8 +2,10 @@
 pragma solidity ^0.8.0;
 
 /**********************************************************\
-* Author: alexi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Metaverse Protocol: [tbd]
+* Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
+* EIP-xxxx Token Interaction Standard: [tbd]
+*
+* Implementation of an interactive token protocol.
 /**********************************************************/
 
 interface IActionRegistry {
