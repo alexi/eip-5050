@@ -48,7 +48,7 @@ interface IERCxxxx {
 
     /// @notice Handle an action
     /// @dev Both the `to` contract and `state` contract are called via
-    /// `handleAction()`. This means that `state` and `to` must be different.
+    /// `handleAction()`.
     /// @param action The action to handle
     function handleAction(Action memory action, uint256 _nonce) external payable;
 
@@ -181,6 +181,7 @@ An interface for contracts to advertise token functionality/compatibility with a
 Return a list of actions that the token supports.
 
 Pro: Very simple to understand and use
+
 Con: No identification system (overlapping keywords), or relational definitions (do X AFTER Y)
 
 ```solidity
@@ -198,13 +199,14 @@ interface IERC4964Definable is IERC4964 {
 }
 ```
 
-##### 2. Sophisticated: Registries and Encodings
+##### 2. Robust: Registries and Encodings
 
 Register namespaced actions and action-flows (do X AFTER Y) as bit-shifted uint256 keys.
 
 These keys can then be ORd together to create a bit-array that defines the supported actions and flows of the token.
 
 Pro: Solves overlapping keywords problem, and allows for relational definitions (do X AFTER Y)
+
 Con: Difficult to understand and use
 
 ```solidity
@@ -290,11 +292,11 @@ interface IControllable {
 
 ## Rationale
 
-There are many proposed uses for interactions with and between tokenized assets. Projects that are developing or have already developed such features include fully on-chain games like Realms' cross-collection Quests and the fighting game nFight, and partially on-chain games like Worldwide Webb and Axie Infinity. It is critical in each of these cases that users are able to commit actions on and across tokenized assets. Regardless of the nature of these actions, the ecosystem will be stronger if wee have a standardized interface that allows for asset-defined action handling, open interaction systems, and cross-functional bridges.
+There are many proposed uses for interactions with and between tokenized assets. Projects that are developing or have already developed such features include fully on-chain games like Realms' cross-collection Quests and the fighting game nFight, and partially on-chain games like Worldwide Webb and Axie Infinity. It is critical in each of these cases that users are able to commit actions on and across tokenized assets. Regardless of the nature of these actions, the ecosystem will be stronger if we have a standardized interface that allows for asset-defined action handling, open interaction systems, and cross-functional bridges.
 
 ### Validation
 
-Validation of the initiating contract via a hash of the action data was satisfactory to nearly everyone surveyed and was the most gas efficient verification solution explored. We recognize that this solution does not allow the receiving and state contracts to validate initiating the `from` account beyond using `tx.origin`, which is vulnerable to phishing attacks.
+Validation of the initiating contract via a hash of the action data was satisfactory to nearly everyone surveyed and was the most gas efficient verification solution explored. We recognize that this solution does not allow the receiving and state contracts to validate the initiating `user` account beyond using `tx.origin`, which is vulnerable to phishing attacks.
 
 We considered using a signed message to validate user-intiation, but this approach had two major drawbacks:
 
