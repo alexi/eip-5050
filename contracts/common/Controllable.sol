@@ -11,9 +11,9 @@ pragma solidity ^0.8.0;
 import "../interfaces/IControllable.sol";
 
 contract Controllable is IControllable {
-    mapping(address => mapping(string => bool)) private _approvedControllers;
+    mapping(address => mapping(bytes4 => bool)) private _approvedControllers;
 
-    function approveController(address sender, string memory action)
+    function approveController(address sender, bytes4 action)
         external
         virtual
         returns (bool)
@@ -22,7 +22,7 @@ contract Controllable is IControllable {
         return true;
     }
 
-    function revokeController(address sender, string memory action)
+    function revokeController(address sender, bytes4 action)
         external
         virtual
         returns (bool)
@@ -31,7 +31,7 @@ contract Controllable is IControllable {
         return true;
     }
 
-    function isApprovedController(address sender, string memory action)
+    function isApprovedController(address sender, bytes4 action)
         external
         view
         returns (bool)
@@ -39,7 +39,7 @@ contract Controllable is IControllable {
         return _isApprovedController(sender, action);
     }
 
-    function _isApprovedController(address sender, string memory action)
+    function _isApprovedController(address sender, bytes4 action)
         internal
         view
         returns (bool)

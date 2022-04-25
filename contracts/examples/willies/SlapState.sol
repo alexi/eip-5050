@@ -9,11 +9,9 @@ pragma solidity ^0.8.0;
 /**********************************************************/
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {StringCompare} from "./StringCompare.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../../interfaces/IERCxxxx.sol";
-import "../ERCxxxx.sol";
-import "../Controllable.sol";
+import "../../standard/ERCxxxxState.sol";
 
 interface IStateExample {
     function registerToken(address _contract, uint256 tokenId) external;
@@ -24,13 +22,16 @@ interface IStateExample {
         returns (uint256);
 }
 
-contract SlapState is ERCxxxx, Ownable {
+contract SlapState is ERCxxxxState, Ownable {
     using Address for address;
-    using StringCompare for string;
 
     mapping(address => mapping(uint256 => uint256)) tokenStrengths;
 
-    string constant SLAP_ACTION = "SLAP";
+    bytes4 constant SLAP_SELECTOR = bytes4(keccak256("slap"));
+
+    constructor() {
+        _registerReceivable(SLAP_SELECTOR);
+    }
 
     function registerToken(address _contract, uint256 tokenId) external {
         require(
@@ -50,13 +51,12 @@ contract SlapState is ERCxxxx, Ownable {
         return tokenStrengths[_contract][tokenId];
     }
 
-    function handleAction(Action calldata action, uint256 _nonce)
+    function onActionReceived(Action calldata action, uint256 _nonce)
         external
         payable
         override
-        onlyValidAction(action, _nonce)
+        onlyReceivableAction(action, _nonce)
     {
-        require(action.name.cmp(SLAP_ACTION), "State: invalid action");
         require(
             action.from._address.isContract() &&
                 action.to._address.isContract(),
@@ -69,11 +69,35 @@ contract SlapState is ERCxxxx, Ownable {
         uint256 toStrength = tokenStrengths[action.to._address][
             action.to._tokenId
         ];
-        require(
-            fromStrength > toStrength,
-            "State: cannot SLAP stronger target"
-        );
-        tokenStrengths[action.from._address][action.from._tokenId]++;
+        require(fromStrength > 0 && toStrength > 0, "0 strength token");
+
+        uint256 val = (_random(action.from._address, action.from._tokenId) %
+            (fromStrength + toStrength)) + 1;
+
+        // Relative strength determines likelihood of a win.
+        if (val < fromStrength) {
+            // sender wins!
+            uint256 delta = fromStrength - val;
+            fromStrength += delta;
+            if (delta >= toStrength) {
+                toStrength = 0;
+            } else {
+                toStrength -= delta;
+            }
+        } else {
+            // receiver wins!
+            uint256 delta = val - fromStrength;
+            toStrength += delta;
+            if (delta >= fromStrength) {
+                fromStrength = 0;
+            } else {
+                fromStrength -= delta;
+            }
+        }
+        tokenStrengths[action.from._address][
+            action.from._tokenId
+        ] = fromStrength;
+        tokenStrengths[action.to._address][action.to._tokenId] = toStrength;
     }
 
     function _random(address _contract, uint256 tokenId)

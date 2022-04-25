@@ -20,9 +20,9 @@ This standard defines a broadly applicable action messaging protocol for the tra
 
 ## Motivation
 
-Tokenized item standards such as [ERC-721](./eip-721.md) and [ERC-1155](./eip-1155.md) serve as the objects of the Ethereum computing environment. Metaverse games are processes that run on these objects. A standard action messaging protocol will allow these game processes to be developed in the same open, Ethereum-native way as the objects they run on.
+Tokenized item standards such as [ERC-721](./eip-721.md) and [ERC-1155](./eip-1155.md) serve as the objects of the Ethereum computing environment. The emerging metaverse games are processes that run on these objects. A standard action messaging protocol will allow these game processes to be developed in the same open, Ethereum-native way as the objects they run on.
 
-The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. Clients can use this common protocol to interact with a network of interactive token contracts, and developers can use the standard to leverage the user-side of the network. They can also save development time as the protocol solves the technical challenges of action messaging.
+The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. It is paired with a common interface to be used by user interfaces to find interoperable contracts and enable users to transmit actions. Clients can use this common protocol to interact with a network of interactive token contracts.
 
 ### Benefits
 1. Make interactive token contracts discoverable and usable by metaverse/game/bridge applications
@@ -39,18 +39,14 @@ pragma solidity ^0.8.0;
 
 /// @title ERC-xxx Token Interaction Standard
 /// @dev See https://eips.ethereum.org/EIPS/eip-xxx
-interface IERCxxxx {
+/// @title ERC-xxxx Token Interaction Standard
+/// @dev See https://eips.ethereum.org/EIPS/eip-xxx
+interface IERCxxxxSender {
     /// @notice Send an action to the target address
     /// @dev The action's `fromContract` is automatically set to `address(this)`,
     /// and the `from` parameter is set to `msg.sender`.
     /// @param action The action to send
-    function commitAction(Action memory action) external payable;
-
-    /// @notice Handle an action
-    /// @dev Both the `to` contract and `state` contract are called via
-    /// `handleAction()`. This means that `state` and `to` must be different.
-    /// @param action The action to handle
-    function handleAction(Action memory action, uint256 _nonce) external payable;
+    function sendAction(Action memory action) external payable;
 
     /// @notice Check if an action is valid based on its hash and nonce
     /// @dev When an action passes through all three possible contracts
@@ -62,7 +58,13 @@ interface IERCxxxx {
     /// @param _hash The hash to validate
     /// @param _nonce The nonce to validate
     function isValid(uint256 _hash, uint256 _nonce) external returns (bool);
-    
+
+    /// @notice Query if an action can be sent.
+    /// @dev Intended for use by off-chain applications to query compatible contracts.
+    /// @param selector The action selector (bytes4(keccack256(string)))
+    /// @return True if `action` is receivable, false otherwise
+    function isSendable(bytes4 selector) external returns (bool);
+
     /// @notice Change or reaffirm the approved address for an action
     /// @dev The zero address indicates there is no approved address.
     ///  Throws unless `msg.sender` is the `_account`, or an authorized
@@ -72,7 +74,7 @@ interface IERCxxxx {
     /// @param _approved The new approved account-action controller
     function approveForAction(
         address _account,
-        string memory _action,
+        bytes4 _action,
         address _approved
     ) external returns (bool);
 
@@ -91,7 +93,7 @@ interface IERCxxxx {
     /// @param _action The action of the account-action to find the approved address for
     /// @return The approved address for this account-action, or the zero address if
     ///  there is none
-    function getApprovedForAction(address _account, string memory _action)
+    function getApprovedForAction(address _account, bytes4 _action)
         external
         view
         returns (address);
@@ -104,10 +106,10 @@ interface IERCxxxx {
         external
         view
         returns (bool);
-        
-    /// @dev This emits when an action is sent (`commitAction()`)
-    event CommitAction(
-        string indexed name,
+
+    /// @dev This emits when an action is sent (`sendAction()`)
+    event ActionSent(
+        bytes4 indexed name,
         address _from,
         address indexed _fromContract,
         uint256 _tokenId,
@@ -116,25 +118,13 @@ interface IERCxxxx {
         address _state,
         bytes _data
     );
-    
-    /// @dev This emits when an action is received (`handleAction()`)
-    event HandleAction(
-        string indexed name,
-        address _from,
-        address indexed _fromContract,
-        uint256 _tokenId,
-        address indexed _to,
-        uint256 _toTokenId,
-        address _state,
-        bytes _data
-    );
-    
+
     /// @dev This emits when the approved address for an account-action pair
     ///  is changed or reaffirmed. The zero address indicates there is no
     ///  approved address.
     event ApprovalForAction(
         address indexed _account,
-        string indexed _action,
+        bytes4 indexed _action,
         address indexed _approved
     );
 
@@ -144,6 +134,34 @@ interface IERCxxxx {
         address indexed _account,
         address indexed _operator,
         bool _approved
+    );
+}
+
+interface IERCxxxxReceiver {
+    /// @notice Handle an action
+    /// @dev Both the `to` contract and `state` contract are called via
+    /// `onActionReceived()`.
+    /// @param action The action to handle
+    function onActionReceived(Action calldata action, uint256 _nonce)
+        external
+        payable;
+
+    /// @notice Query if an action is receivable
+    /// @dev Intended for use by off-chain applications to query compatible contracts.
+    /// @param selector The action selector (bytes4(keccack256(string)))
+    /// @return True if `action` is receivable, false otherwise
+    function isReceivable(bytes4 selector) external returns (bool);
+
+    /// @dev This emits when a valid action is received.
+    event ActionReceived(
+        bytes4 indexed name,
+        address _from,
+        address indexed _fromContract,
+        uint256 _tokenId,
+        address indexed _to,
+        uint256 _toTokenId,
+        address _state,
+        bytes _data
     );
 }
 
@@ -161,7 +179,7 @@ struct ActionObject {
 /// @param state The state contract
 /// @param data Additional data with no specified format
 struct Action {
-    string name;
+    bytes4 selector;
     address user;
     ActionObject from;
     ActionObject to;
@@ -171,73 +189,6 @@ struct Action {
 ```
 
 ### Extensions
-
-#### Definable
-
-An interface for contracts to advertise token functionality/compatibility with action types and flows. There are two implementations under consideration:
-
-##### 1. Naive: List of Actions
-
-Return a list of actions that the token supports.
-
-Pro: Very simple to understand and use
-Con: No identification system (overlapping keywords), or relational definitions (do X AFTER Y)
-
-```solidity
-pragma solidity ^0.8.0;
-
-interface IERC4964Definable is IERC4964 {
-    /// @notice Returns a bit-array of ORd action definitions, and
-    /// the namespace used for the action encoding.
-    /// @dev Actions
-    /// @param tokenId The token to define
-    function supportedActions(uint256 tokenId)
-        external
-        view
-        returns (string[] memory names);
-}
-```
-
-##### 2. Sophisticated: Registries and Encodings
-
-Register namespaced actions and action-flows (do X AFTER Y) as bit-shifted uint256 keys.
-
-These keys can then be ORd together to create a bit-array that defines the supported actions and flows of the token.
-
-Pro: Solves overlapping keywords problem, and allows for relational definitions (do X AFTER Y)
-Con: Difficult to understand and use
-
-```solidity
-pragma solidity ^0.8.0;
-
-interface IActionRegistry {
-    function register(string memory name, uint256 namespace) external;
-
-    function lookup(string memory name, uint256 namespace)
-        external
-        view
-        returns (uint256);
-
-    function reverseLookup(uint256 key, uint256 namespace)
-        external
-        view
-        returns (string memory);
-}
-
-interface IERCxxxxDefinable {
-    /// @notice Returns a bit-array of ORd action definitions, and
-    /// the namespace used for the action encoding.
-    /// @param tokenId The token to define
-    function definition(uint256 tokenId)
-        external
-        view
-        returns (
-            address registry,
-            uint256 namespace,
-            bytes32 def
-        );
-}
-```
 
 #### Action Proxies
 

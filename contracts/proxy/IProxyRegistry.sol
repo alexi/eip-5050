@@ -8,17 +8,18 @@ pragma solidity ^0.8.0;
 * Implementation of an interactive token protocol.
 /**********************************************************/
 
-interface IControllable {
-    function approveController(address sender, bytes4 action)
-        external
-        returns (bool);
+interface IProxyRegistry {
+    function register(address _contract, address _proxy) external;
+    
+    function deregister(address _contract) external;
 
-    function revokeController(address sender, bytes4 action)
-        external
-        returns (bool);
-
-    function isApprovedController(address sender, bytes4 action)
+    function proxy(address _contract)
         external
         view
-        returns (bool);
+        returns (address);
+
+    function reverseProxy(address _proxy)
+        external
+        view
+        returns (address);
 }

@@ -8,22 +8,14 @@ pragma solidity ^0.8.0;
 * Implementation of an interactive token protocol.
 /**********************************************************/
 
-/// @title ERC-xxx Token Interaction Standard
+/// @title ERC-xxxx Token Interaction Standard
 /// @dev See https://eips.ethereum.org/EIPS/eip-xxx
-interface IERCxxxx {
+interface IERCxxxxSender {
     /// @notice Send an action to the target address
     /// @dev The action's `fromContract` is automatically set to `address(this)`,
     /// and the `from` parameter is set to `msg.sender`.
     /// @param action The action to send
-    function commitAction(Action memory action) external payable;
-
-    /// @notice Handle an action
-    /// @dev Both the `to` contract and `state` contract are called via
-    /// `handleAction()`. This means that `state` and `to` must be different.
-    /// @param action The action to handle
-    function handleAction(Action calldata action, uint256 _nonce)
-        external
-        payable;
+    function sendAction(Action memory action) external payable;
 
     /// @notice Check if an action is valid based on its hash and nonce
     /// @dev When an action passes through all three possible contracts
@@ -36,6 +28,14 @@ interface IERCxxxx {
     /// @param _nonce The nonce to validate
     function isValid(uint256 _hash, uint256 _nonce) external returns (bool);
 
+    /// @notice Query if an action can be sent.
+    /// @dev Intended for use by off-chain applications to query compatible contracts.
+    /// @param selector The action selector (bytes4(keccack256(string)))
+    /// @return True if `action` is receivable, false otherwise
+    function isSendable(bytes4 selector) external returns (bool);
+
+    function sendableActions() external returns (bytes4[] memory);
+
     /// @notice Change or reaffirm the approved address for an action
     /// @dev The zero address indicates there is no approved address.
     ///  Throws unless `msg.sender` is the `_account`, or an authorized
@@ -45,7 +45,7 @@ interface IERCxxxx {
     /// @param _approved The new approved account-action controller
     function approveForAction(
         address _account,
-        string memory _action,
+        bytes4 _action,
         address _approved
     ) external returns (bool);
 
@@ -64,7 +64,7 @@ interface IERCxxxx {
     /// @param _action The action of the account-action to find the approved address for
     /// @return The approved address for this account-action, or the zero address if
     ///  there is none
-    function getApprovedForAction(address _account, string memory _action)
+    function getApprovedForAction(address _account, bytes4 _action)
         external
         view
         returns (address);
@@ -78,21 +78,9 @@ interface IERCxxxx {
         view
         returns (bool);
 
-    /// @dev This emits when an action is sent (`commitAction()`)
-    event CommitAction(
-        string indexed name,
-        address _from,
-        address indexed _fromContract,
-        uint256 _tokenId,
-        address indexed _to,
-        uint256 _toTokenId,
-        address _state,
-        bytes _data
-    );
-
-    /// @dev This emits when an action is received (`handleAction()`)
-    event HandleAction(
-        string indexed name,
+    /// @dev This emits when an action is sent (`sendAction()`)
+    event ActionSent(
+        bytes4 indexed name,
         address _from,
         address indexed _fromContract,
         uint256 _tokenId,
@@ -107,7 +95,7 @@ interface IERCxxxx {
     ///  approved address.
     event ApprovalForAction(
         address indexed _account,
-        string indexed _action,
+        bytes4 indexed _action,
         address indexed _approved
     );
 
@@ -117,6 +105,34 @@ interface IERCxxxx {
         address indexed _account,
         address indexed _operator,
         bool _approved
+    );
+}
+
+interface IERCxxxxReceiver {
+    /// @notice Handle an action
+    /// @dev Both the `to` contract and `state` contract are called via
+    /// `onActionReceived()`.
+    /// @param action The action to handle
+    function onActionReceived(Action calldata action, uint256 _nonce)
+        external
+        payable;
+
+    /// @notice Query if an action is receivable
+    /// @dev Intended for use by off-chain applications to query compatible contracts.
+    /// @param selector The action selector (bytes4(keccack256(string)))
+    /// @return True if `action` is receivable, false otherwise
+    function isReceivable(bytes4 selector) external returns (bool);
+
+    /// @dev This emits when a valid action is received.
+    event ActionReceived(
+        bytes4 indexed name,
+        address _from,
+        address indexed _fromContract,
+        uint256 _tokenId,
+        address indexed _to,
+        uint256 _toTokenId,
+        address _state,
+        bytes _data
     );
 }
 
@@ -134,7 +150,7 @@ struct ActionObject {
 /// @param state The state contract
 /// @param data Additional data with no specified format
 struct Action {
-    string name;
+    bytes4 selector;
     address user;
     ActionObject from;
     ActionObject to;
