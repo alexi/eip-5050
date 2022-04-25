@@ -22,7 +22,7 @@ This standard defines a broadly applicable action messaging protocol for the tra
 
 Tokenized item standards such as [ERC-721](./eip-721.md) and [ERC-1155](./eip-1155.md) serve as the objects of the Ethereum computing environment. The emerging metaverse games are processes that run on these objects. A standard action messaging protocol will allow these game processes to be developed in the same open, Ethereum-native way as the objects they run on.
 
-The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. It is paired with a common interface for defining functionality that allows off-chain services to aggregate and query supported contracts for interoperability. Clients can use this common protocol to interact with a network of interactive token contracts.
+The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. It is paired with a common interface for defining functionality that allows off-chain services to aggregate and query supported contracts for interoperability. Contracts that implement this standard can be automatically discovered and used by user interfaces, creating a network of interactive token contracts.
 
 ### Benefits
 1. Make interactive token contracts discoverable and usable by metaverse/game/bridge applications
