@@ -4,15 +4,6 @@
 pragma solidity ^0.8.0;
 
 library EnumerableBytes4Set {
-    // To implement this library for multiple types with as little code
-    // repetition as possible, we write it in terms of a generic Set type with
-    // bytes4 values.
-    // The Set implementation uses private functions, and user-facing
-    // implementations (such as AddressSet) are just wrappers around the
-    // underlying Set.
-    // This means that we can only create new EnumerableSets for types that fit
-    // in bytes4.
-
     struct Set {
         // Storage of set values
         bytes4[] _values;
@@ -27,8 +18,8 @@ library EnumerableBytes4Set {
      * Returns true if the value was added to the set, that is if it was not
      * already present.
      */
-    function _add(Set storage set, bytes4 value) private returns (bool) {
-        if (!_contains(set, value)) {
+    function add(Set storage set, bytes4 value) internal returns (bool) {
+        if (!contains(set, value)) {
             set._values.push(value);
             // The value is stored at length-1, but we add 1 to all indexes
             // and use 0 as a sentinel value
@@ -45,7 +36,7 @@ library EnumerableBytes4Set {
      * Returns true if the value was removed from the set, that is if it was
      * present.
      */
-    function _remove(Set storage set, bytes4 value) private returns (bool) {
+    function remove(Set storage set, bytes4 value) internal returns (bool) {
         // We read and store the value's index to prevent multiple reads from the same storage slot
         uint256 valueIndex = set._indexes[value];
 
@@ -82,8 +73,8 @@ library EnumerableBytes4Set {
     /**
      * @dev Returns true if the value is in the set. O(1).
      */
-    function _contains(Set storage set, bytes4 value)
-        private
+    function contains(Set storage set, bytes4 value)
+        internal
         view
         returns (bool)
     {
@@ -93,7 +84,7 @@ library EnumerableBytes4Set {
     /**
      * @dev Returns the number of values on the set. O(1).
      */
-    function _length(Set storage set) private view returns (uint256) {
+    function length(Set storage set) internal view returns (uint256) {
         return set._values.length;
     }
 
@@ -107,7 +98,7 @@ library EnumerableBytes4Set {
      *
      * - `index` must be strictly less than {length}.
      */
-    function _at(Set storage set, uint256 index) private view returns (bytes4) {
+    function at(Set storage set, uint256 index) internal view returns (bytes4) {
         return set._values[index];
     }
 
@@ -119,7 +110,7 @@ library EnumerableBytes4Set {
      * this function has an unbounded cost, and using it as part of a state-changing function may render the function
      * uncallable if the set grows to a point where copying to memory consumes too much gas to fit in a block.
      */
-    function _values(Set storage set) private view returns (bytes4[] memory) {
+    function values(Set storage set) internal view returns (bytes4[] memory) {
         return set._values;
     }
 }

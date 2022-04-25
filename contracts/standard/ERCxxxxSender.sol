@@ -12,11 +12,13 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IERCxxxxSender, IERCxxxxReceiver, Action} from "../interfaces/IERCxxxx.sol";
 import "../common/Controllable.sol";
+import "../common/EnumerableBytes4Set.sol";
 
 contract ERCxxxxSender is Controllable, IERCxxxxSender {
     using Address for address;
+    using EnumerableBytes4Set for EnumerableBytes4Set.Set;
 
-    mapping(bytes4 => bool) sendableActions;
+    EnumerableBytes4Set.Set private _sendableActions;
 
     uint256 private _nonce;
     uint256 private _hash;
@@ -41,15 +43,18 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
         return actionHash == _hash && nonce == _nonce;
     }
 
-    function isSendable(bytes4 selector) external view returns (bool) {
-        return sendableActions[selector];
+    function sendableActions() external view returns (bytes4[] memory) {
+        return _sendableActions.values();
     }
 
     modifier onlySendableAction(Action memory action) {
         if (_isApprovedController(msg.sender, action.selector)) {
             return;
         }
-        require(sendableActions[action.selector], "ERCxxxx: invalid action");
+        require(
+            _sendableActions.contains(action.selector),
+            "ERCxxxx: invalid action"
+        );
         require(
             _isApprovedOrSelf(action.user, action.selector),
             "ERCxxxx: unapproved sender"
@@ -135,7 +140,7 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
                 }
             }
         }
-        emit ActionSent(
+        emit SendAction(
             action.selector,
             action.user,
             action.from._address,
@@ -177,6 +182,6 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
     }
 
     function _registerSendable(bytes4 action) internal {
-        sendableActions[action] = true;
+        _sendableActions.add(action);
     }
 }

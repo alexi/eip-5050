@@ -22,7 +22,7 @@ This standard defines a broadly applicable action messaging protocol for the tra
 
 Tokenized item standards such as [ERC-721](./eip-721.md) and [ERC-1155](./eip-1155.md) serve as the objects of the Ethereum computing environment. The emerging metaverse games are processes that run on these objects. A standard action messaging protocol will allow these game processes to be developed in the same open, Ethereum-native way as the objects they run on.
 
-The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. It is paired with a common interface to be used by user interfaces to find interoperable contracts and enable users to transmit actions. Clients can use this common protocol to interact with a network of interactive token contracts.
+The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. It is paired with a common interface for defining functionality that allows off-chain services to aggregate and query supported contracts for interoperability. Clients can use this common protocol to interact with a network of interactive token contracts.
 
 ### Benefits
 1. Make interactive token contracts discoverable and usable by metaverse/game/bridge applications
@@ -37,8 +37,6 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 ```solidity
 pragma solidity ^0.8.0;
 
-/// @title ERC-xxx Token Interaction Standard
-/// @dev See https://eips.ethereum.org/EIPS/eip-xxx
 /// @title ERC-xxxx Token Interaction Standard
 /// @dev See https://eips.ethereum.org/EIPS/eip-xxx
 interface IERCxxxxSender {
@@ -59,11 +57,9 @@ interface IERCxxxxSender {
     /// @param _nonce The nonce to validate
     function isValid(uint256 _hash, uint256 _nonce) external returns (bool);
 
-    /// @notice Query if an action can be sent.
+    /// @notice Retrieve list of actions that can be sent.
     /// @dev Intended for use by off-chain applications to query compatible contracts.
-    /// @param selector The action selector (bytes4(keccack256(string)))
-    /// @return True if `action` is receivable, false otherwise
-    function isSendable(bytes4 selector) external returns (bool);
+    function sendableActions() external view returns (bytes4[] memory);
 
     /// @notice Change or reaffirm the approved address for an action
     /// @dev The zero address indicates there is no approved address.
@@ -108,7 +104,7 @@ interface IERCxxxxSender {
         returns (bool);
 
     /// @dev This emits when an action is sent (`sendAction()`)
-    event ActionSent(
+    event SendAction(
         bytes4 indexed name,
         address _from,
         address indexed _fromContract,
@@ -146,11 +142,9 @@ interface IERCxxxxReceiver {
         external
         payable;
 
-    /// @notice Query if an action is receivable
+    /// @notice Retrieve list of actions that can be received.
     /// @dev Intended for use by off-chain applications to query compatible contracts.
-    /// @param selector The action selector (bytes4(keccack256(string)))
-    /// @return True if `action` is receivable, false otherwise
-    function isReceivable(bytes4 selector) external returns (bool);
+    function receivableActions() external view returns (bytes4[] memory);
 
     /// @dev This emits when a valid action is received.
     event ActionReceived(
@@ -186,6 +180,7 @@ struct Action {
     address state;
     bytes data;
 }
+
 ```
 
 ### Extensions

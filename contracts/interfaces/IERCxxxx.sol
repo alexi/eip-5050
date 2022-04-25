@@ -28,13 +28,9 @@ interface IERCxxxxSender {
     /// @param _nonce The nonce to validate
     function isValid(uint256 _hash, uint256 _nonce) external returns (bool);
 
-    /// @notice Query if an action can be sent.
+    /// @notice Retrieve list of actions that can be sent.
     /// @dev Intended for use by off-chain applications to query compatible contracts.
-    /// @param selector The action selector (bytes4(keccack256(string)))
-    /// @return True if `action` is receivable, false otherwise
-    function isSendable(bytes4 selector) external returns (bool);
-
-    function sendableActions() external returns (bytes4[] memory);
+    function sendableActions() external view returns (bytes4[] memory);
 
     /// @notice Change or reaffirm the approved address for an action
     /// @dev The zero address indicates there is no approved address.
@@ -79,7 +75,7 @@ interface IERCxxxxSender {
         returns (bool);
 
     /// @dev This emits when an action is sent (`sendAction()`)
-    event ActionSent(
+    event SendAction(
         bytes4 indexed name,
         address _from,
         address indexed _fromContract,
@@ -117,11 +113,9 @@ interface IERCxxxxReceiver {
         external
         payable;
 
-    /// @notice Query if an action is receivable
+    /// @notice Retrieve list of actions that can be received.
     /// @dev Intended for use by off-chain applications to query compatible contracts.
-    /// @param selector The action selector (bytes4(keccack256(string)))
-    /// @return True if `action` is receivable, false otherwise
-    function isReceivable(bytes4 selector) external returns (bool);
+    function receivableActions() external view returns (bytes4[] memory);
 
     /// @dev This emits when a valid action is received.
     event ActionReceived(

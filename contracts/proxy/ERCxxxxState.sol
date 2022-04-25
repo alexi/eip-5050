@@ -12,11 +12,13 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IERCxxxxSender, IERCxxxxReceiver, Action} from "../interfaces/IERCxxxx.sol";
 import "../common/Controllable.sol";
+import "../common/EnumerableBytes4Set.sol";
 
 contract ERCxxxxState is Controllable, IERCxxxxReceiver {
     using Address for address;
+    using EnumerableBytes4Set for EnumerableBytes4Set.Set;
 
-    mapping(bytes4 => bool) receivableActions;
+    EnumerableBytes4Set.Set private _receivableActions;
 
     function onActionReceived(Action calldata action, uint256 nonce)
         external
@@ -28,15 +30,18 @@ contract ERCxxxxState is Controllable, IERCxxxxReceiver {
         _onActionReceived(action, nonce);
     }
 
-    function isReceivable(bytes4 selector) external view returns (bool) {
-        return receivableActions[selector];
+    function receivableActions() external view returns (bytes4[] memory) {
+        return _receivableActions.values();
     }
 
     modifier onlyReceivableAction(Action calldata action, uint256 nonce) {
         if (_isApprovedController(msg.sender, action.selector)) {
             return;
         }
-        require(receivableActions[action.selector], "ERCxxxx: invalid action");
+        require(
+            _receivableActions.contains(action.selector),
+            "ERCxxxx: invalid action"
+        );
         require(action.state == address(this), "ERCxxxx: invalid state");
 
         address expectedSender = action.to._address;
@@ -104,6 +109,6 @@ contract ERCxxxxState is Controllable, IERCxxxxReceiver {
     }
 
     function _registerReceivable(bytes4 action) internal {
-        receivableActions[action] = true;
+        _receivableActions.add(action);
     }
 }
