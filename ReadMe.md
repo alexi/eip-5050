@@ -44,17 +44,7 @@ interface IERCxxxxSender {
     /// @dev The action's `fromContract` is automatically set to `address(this)`,
     /// and the `from` parameter is set to `msg.sender`.
     /// @param action The action to send
-<<<<<<< HEAD
-    function commitAction(Action memory action) external payable;
-
-    /// @notice Handle an action
-    /// @dev Both the `to` contract and `state` contract are called via
-    /// `handleAction()`.
-    /// @param action The action to handle
-    function handleAction(Action memory action, uint256 _nonce) external payable;
-=======
     function sendAction(Action memory action) external payable;
->>>>>>> sendables
 
     /// @notice Check if an action is valid based on its hash and nonce
     /// @dev When an action passes through all three possible contracts
