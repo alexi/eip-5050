@@ -28,7 +28,7 @@ Aggregators can also parse action event logs to derive analytics on which contra
 
 ### Benefits
 1. Make interactive token contracts discoverable and usable by metaverse/game applications
-2. Allow for generalized action bridges to transmit actions between chains
+2. Allow for generalized action bridges to transmit actions between chains (enabling actions on L1 assets to be saved to L2s, and for cross-chain asset interactions).
 3. Provide a simple solution for developers to make dynamic NFTs and other tokens
 4. Promote decentralized, collaborative game building
 
@@ -163,7 +163,7 @@ interface IERCxxxxReceiver {
 
 /// @param _address The address of the interactive object
 /// @param tokenId The token that is interacting (optional)
-struct ActionObject {
+struct Object {
     address _address;
     uint256 _tokenId;
 }
@@ -177,13 +177,28 @@ struct ActionObject {
 struct Action {
     bytes4 selector;
     address user;
-    ActionObject from;
-    ActionObject to;
+    Object from;
+    Object to;
     address state;
     bytes data;
 }
 
 ```
+
+### How State Contracts Work
+
+Actions do not require that a state contract be used. Actions can be transmitted from one token contract (`Object`) to another, or from a user to a single token contract. In these cases, the sending and receiving contracts each control their own state.
+
+State contracts allow arbitrary senders and receivers to share a user-specified state environment. Each `Object` MAY define its own action handling, which MAY include reading from the state contract during, but the action MUST be finalized by the state contract. This means the state contract serves as ground truth.
+
+The intended workflow is for state contracts to define stateful game environments, typically with a custom `IState` interface for use by other contracts. `Objects` register with state contracts to initialize their state. Then, users commit actions using a specific state contract to make things happen in the game.
+
+The modularity of state contracts allows multiple copies of the same or similar "game environment" to be created and swapped in or out by the client. There are many ways this modularity can be used:
+
+- Aggregator services can analyze action events to determine likely state contracts for a given sender/receiver
+- Sender/receiver contracts can require a specific state contract
+- Sender/receiver contracts can allow any state contract, but set a default. This is important for NFTs that change their render based on state. This default can also be configurable by the token holder.
+- State contracts can be bridges to state contracts on another chain, allowing for L1-verification, L2-storage usage pattern (validate action with layer-1 assets, save on l2 where storage is cheaper).
 
 ### Extensions
 
@@ -238,7 +253,7 @@ interface IControllable {
 
 ## Rationale
 
-There are many proposed uses for interactions with and between tokenized assets. Projects that are developing or have already developed such features include fully on-chain games like Realms' cross-collection Quests and the fighting game nFight, and partially on-chain games like Worldwide Webb and Axie Infinity. It is critical in each of these cases that users are able to commit actions on and across tokenized assets. Regardless of the nature of these actions, the ecosystem will be stronger if we have a standardized interface that allows for asset-defined action handling, open interaction systems, and cross-functional bridges.
+There are many proposed uses for interactions with and between tokenized assets. Projects that are developing or have already developed such features include fully on-chain games like [Realms' cross-collection Quests](https://docs.bibliothecadao.xyz/lootverse-master-scroll/) and the fighting game [wrasslers](https://wrasslers.com/), and partially on-chain games like [Worldwide Webb](https://webb.game/) and [Axie Infinity[(https://axieinfinity.com/)]. It is critical in each of these cases that users are able to commit actions on and across tokenized assets. Regardless of the nature of these actions, the ecosystem will be stronger if we have a standardized interface that allows for asset-defined action handling, open interaction systems, and cross-functional bridges.
 
 ### Validation
 
@@ -249,19 +264,19 @@ We considered using a signed message to validate user-intiation, but this approa
 1. **UX** users would be required to perform two steps to commit each action (sign the message, and send the transaction)
 2. **Gas** performing signature verification is computationally intensive
 
-Most importantly, the consensus among the developers surveyed is that strict user validation is not necessary because the concern is only that malicious initiating contracts will phish users to commit actions *with* the malicious contract's assets. **This protocol treats the initiating contract's token as the prime mover, not the user.** Anyone can tweet at Bill Gates. Any token can send an action to another token. Which actions are accepted, and how they are handled is left up to the contracts. High-value actions can be reputation-gated via state contracts, or access-gated with allow/disallow-lists. (`Controllable`)[#controllable] contracts can also be used via trusted controllers as an alternative to action chaining.
+Most importantly, the consensus among the developers surveyed is that strict user validation is not necessary because the concern is only that malicious initiating contracts will phish users to commit actions *with* the malicious contract's assets. **This protocol treats the initiating contract's token as the prime mover, not the user.** Anyone can tweet at Bill Gates. Any token can send an action to another token. Which actions are accepted, and how they are handled is left up to the contracts. High-value actions can be reputation-gated via state contracts, or access-gated with allow/disallow-lists. [`Controllable`](#controllable) contracts can also be used via trusted controllers as an alternative to action chaining.
 
 *Alternatives considered: action transmitted as a signed message, action saved to reusable storage slot on initiating contract*
 
-### State Contracts
+### Action Selectors
+
+Actions are identified using function selectors (`bytes4(keccack256(action_key))`). This allows for efficient comparison operations on arbitrarily long action keys with simple namespacing (e.g. `"cast"` can become `"spells.cast"`) and sequence specification (e.g. `"land.settle>land.build"` indicating `"land.settle"` must be received before `"land.build"`).
+
+## State Contracts
 
 Moving state logic into dedicated, parameterized contracts makes state an action primitive and prevents state management from being obscured within the contracts. Specifically, it allows users to decide which "environment" to commit the action in, and allows the initiating and receiving contracts to share state data without requiring them to communicate.
 
 The specifics of state contract interfaces are outside the scope of this standard, and are intended to be purpose-built for unique interactive environments.
-
-### Action Strings
-
-Actions are identified with arbitrary strings. Strings are easy to use because they are human-readable. The trade-off compared with an action ID registry model is in space and gas efficiency, and strict uniqueness.
 
 ### Gas and Complexity (regarding action chaining)
 
@@ -279,7 +294,7 @@ Test cases are include in `../assets/eip-####/`.
 
 ## Reference Implementation
 
-Implementations for both standard contracts and EIP-2535 Diamonds are included in `../assets/eip-####/`.
+Implementations are included in `../assets/eip-####/`.
 
 ## Security Considerations
 
