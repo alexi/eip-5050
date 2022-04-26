@@ -18,7 +18,7 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
     using Address for address;
     using EnumerableBytes4Set for EnumerableBytes4Set.Set;
 
-    EnumerableBytes4Set.Set private _sendableActions;
+    EnumerableBytes4Set.Set _sendableActions;
 
     uint256 private _nonce;
     uint256 private _hash;

@@ -24,9 +24,11 @@ Tokenized item standards such as [ERC-721](./eip-721.md) and [ERC-1155](./eip-11
 
 The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. It is paired with a common interface for defining functionality that allows off-chain services to aggregate and query supported contracts for interoperability. Contracts that implement this standard can be automatically discovered and used by user interfaces, creating a network of interactive token contracts.
 
+Aggregators can also parse action event logs to derive analytics on which contracts users are likely to interact with, what state contracts to use with certain contracts and action types, trending/popular/new action contracts, and more to dramatically improve the user experience.
+
 ### Benefits
-1. Make interactive token contracts discoverable and usable by metaverse/game/bridge applications
-2. Allow for generalized action UIs for users to commit actions with/on their tokens
+1. Make interactive token contracts discoverable and usable by metaverse/game applications
+2. Allow for generalized action bridges to transmit actions between chains
 3. Provide a simple solution for developers to make dynamic NFTs and other tokens
 4. Promote decentralized, collaborative game building
 

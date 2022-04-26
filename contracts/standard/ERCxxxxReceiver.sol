@@ -18,7 +18,7 @@ contract ERCxxxxReceiver is Controllable, IERCxxxxReceiver {
     using Address for address;
     using EnumerableBytes4Set for EnumerableBytes4Set.Set;
 
-    EnumerableBytes4Set.Set private _receivableActions;
+    EnumerableBytes4Set.Set _receivableActions;
 
     modifier onlyReceivableAction(Action calldata action, uint256 nonce) {
         if (_isApprovedController(msg.sender, action.selector)) {
