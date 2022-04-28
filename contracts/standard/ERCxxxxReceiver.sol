@@ -38,7 +38,8 @@ contract ERCxxxxReceiver is Controllable, IERCxxxxReceiver {
             "ERCxxxx: invalid sender"
         );
         require(
-            action.from._address != address(0) || action.user == msg.sender,
+            (action.from._address != address(0) && action.user == tx.origin) ||
+                action.user == msg.sender,
             "ERCxxxx: invalid sender"
         );
         _;

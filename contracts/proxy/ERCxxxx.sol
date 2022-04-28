@@ -12,8 +12,17 @@ import "./ERCxxxxSender.sol";
 import "./ERCxxxxReceiver.sol";
 
 contract ERCxxxx is ERCxxxxSender, ERCxxxxReceiver {
+    function setProxyRegistry(address registry)
+        external
+        virtual
+        override(ERCxxxxSender, ERCxxxxReceiver)
+        onlyOwner
+    {
+        _setProxyRegistry(registry);
+    }
+
     function _registerAction(bytes4 action) internal {
-        receivableActions[action] = true;
-        sendableActions[action] = true;
+        _registerReceivable(action);
+        _registerSendable(action);
     }
 }

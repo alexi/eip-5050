@@ -61,7 +61,7 @@ interface IERCxxxxSender {
 
     /// @notice Retrieve list of actions that can be sent.
     /// @dev Intended for use by off-chain applications to query compatible contracts.
-    function sendableActions() external view returns (bytes4[] memory);
+    function sendableActions() external view returns (bytes4[]);
 
     /// @notice Change or reaffirm the approved address for an action
     /// @dev The zero address indicates there is no approved address.
@@ -202,29 +202,23 @@ The modularity of state contracts allows multiple copies of the same or similar 
 
 ### Extensions
 
-#### Action Proxies
+#### Interactive
 
-Action proxies can be used to support backwards compatibility with non-upgradeable contracts, and potentially for cross-chain action bridging.
+Some contracts may have custom user interfaces that facilitate interaction.
 
 ```solidity
 pragma solidity ^0.8.0;
 
-interface IProxyRegistry {
-    function register(address _contract, address _proxy) external;
-    
-    function deregister(address _contract) external;
-
-    function proxy(address _contract)
-        external
-        view
-        returns (address);
-
-    function reverseProxy(address _proxy)
-        external
-        view
-        returns (address);
+interface IERCxxxxInteractive {
+    function interfaceURI(bytes4 _action) external view returns (string);
 }
 ```
+
+#### Action Proxies
+
+Action proxies can be used to support backwards compatibility with non-upgradeable contracts, and potentially for cross-chain action bridging.
+
+They can be implemented using a modified version of [ERC-1820](https://eips.ethereum.org/EIPS/eip-1820#erc-1820-registry-smart-contract) that allows contract owners to call `setManager()`.
 
 #### Controllable
 
@@ -280,7 +274,7 @@ The specifics of state contract interfaces are outside the scope of this standar
 
 ### Gas and Complexity (regarding action chaining)
 
-Action handling within each contract can be arbitrarily complex, and there is no way to eliminate the possibility that certain contract interactions will run out of gas. However, develoeprs SHOULD make every effort to minimize gas usage in their action handler methods, and avoid the use of for-loops.
+Action handling within each contract can be arbitrarily complex, and there is no way to eliminate the possibility that certain contract interactions will run out of gas. However, developers SHOULD make every effort to minimize gas usage in their action handler methods, and avoid the use of for-loops.
 
 *Alternatives considered: multi-request action chains that push-pull from one contract to the next.*
 

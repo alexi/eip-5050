@@ -10,11 +10,13 @@ pragma solidity ^0.8.0;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERCxxxxSender, IERCxxxxReceiver, Action} from "../interfaces/IERCxxxx.sol";
 import "../common/Controllable.sol";
 import "../common/EnumerableBytes4Set.sol";
+import {ProxyClient} from "./ProxyClient.sol";
 
-contract ERCxxxxSender is Controllable, IERCxxxxSender {
+contract ERCxxxxSender is Controllable, IERCxxxxSender, ProxyClient, Ownable {
     using Address for address;
     using EnumerableBytes4Set for EnumerableBytes4Set.Set;
 
@@ -25,6 +27,10 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
 
     mapping(address => mapping(bytes4 => address)) actionApprovals;
     mapping(address => mapping(address => bool)) operatorApprovals;
+
+    function setProxyRegistry(address registry) external virtual onlyOwner {
+        _setProxyRegistry(registry);
+    }
 
     function sendAction(Action memory action)
         external
@@ -58,6 +64,11 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
         require(
             _isApprovedOrSelf(action.user, action.selector),
             "ERCxxxx: unapproved sender"
+        );
+        require(
+            action.from._address == address(this) ||
+                getManager(action.from._address) == address(this),
+            "ERCxxxx: invalid from address"
         );
         _;
     }
@@ -111,7 +122,6 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
 
     function _sendAction(Action memory action) internal {
         if (!_isApprovedController(msg.sender, action.selector)) {
-            action.from._address = address(this);
             bool toIsContract = action.to._address.isContract();
             bool stateIsContract = action.state.isContract();
             address next;
@@ -126,6 +136,7 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
                 nonce = _nonce;
             }
             if (next.isContract()) {
+                next = getManager(next);
                 try
                     IERCxxxxReceiver(next).onActionReceived{value: msg.value}(
                         action,

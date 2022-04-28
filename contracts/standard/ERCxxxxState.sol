@@ -43,6 +43,10 @@ contract ERCxxxxState is Controllable, IERCxxxxReceiver {
             "ERCxxxx: invalid action"
         );
         require(action.state == address(this), "ERCxxxx: invalid state");
+        require(
+            action.user == address(0) || action.user == tx.origin,
+            "ERCxxxx: invalid user"
+        );
 
         address expectedSender = action.to._address;
         if (expectedSender == address(0)) {

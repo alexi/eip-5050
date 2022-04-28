@@ -132,7 +132,7 @@ interface IERCxxxxReceiver {
 
 /// @param _address The address of the interactive object
 /// @param tokenId The token that is interacting (optional)
-struct ActionObject {
+struct Object {
     address _address;
     uint256 _tokenId;
 }
@@ -146,8 +146,8 @@ struct ActionObject {
 struct Action {
     bytes4 selector;
     address user;
-    ActionObject from;
-    ActionObject to;
+    Object from;
+    Object to;
     address state;
     bytes data;
 }

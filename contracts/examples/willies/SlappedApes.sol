@@ -49,50 +49,38 @@ pragma solidity ^0.8.13;
 
 import {SlapStateController} from "./SlapState.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {ERCxxxx, Action, Strings} from "../../proxy/ERCxxxx.sol";
+import {ERCxxxx, Action} from "../../proxy/ERCxxxx.sol";
 
-contract Willies is ERCxxxx, ERC721 {
+// Bored
+contract ApesProxy is ERCxxxx {
     bytes4 constant SLAP_SELECTOR = bytes4(keccak256("slap"));
 
-    string constant deadFace = unicode"💀";
-    string constant slappedFace = unicode"😵‍💫";
-    string constant defaultFace = unicode"😀";
-    string constant winningFace = unicode"🏆";
+    // Suppose other actions are also supported
+    bytes4 constant CAST_SELECTOR = bytes4(keccak256("cast"));
+    bytes4 constant HONOR_SELECTOR = bytes4(keccak256("honor"));
+
+    IERC721 bayc;
 
     /// Any state controller can be used for actions, but tokenURI
     /// reads need a single default.
-    address defaultStateController;
+    address defaultSlapStateController;
 
     /// Allow token holders to set custom default state controller for
     /// tokenURI reads.
-    mapping(uint256 => address) tokenStateController;
+    mapping(uint256 => address) tokenSlapStateController;
 
-    constructor(address _defaultStateController)
-        ERC721("Willies", unicode"🏆")
-    {
-        defaultStateController = _defaultStateController;
-        _registerAction(SLAP_SELECTOR);
-    }
-
-    function getDefaultTokenStateController(uint256 tokenId)
-        public
-        view
-        returns (address)
-    {
-        if (tokenStateController[tokenId] != address(0)) {
-            return tokenStateController[tokenId];
-        }
-        return defaultStateController;
-    }
-
-    function setDefaultTokenStateController(
+    /// Off-chain BAYC service listens for `StateControllerUpdate` events
+    /// and updates render to match the user-defined state controller.
+    event StateControllerUpdate(
         uint256 tokenId,
-        address stateController
-    ) external {
-        require(ownerOf(tokenId) == msg.sender, "not owner");
-        tokenStateController[tokenId] = stateController;
+        string controllerType,
+        address controller
+    );
+
+    constructor(address _bayc) {
+        _registerAction(SLAP_SELECTOR);
+        bayc = IERC721(_bayc);
     }
 
     function sendAction(Action memory action)
@@ -101,12 +89,9 @@ contract Willies is ERCxxxx, ERC721 {
         override
         onlySendableAction(action)
     {
-        uint256 strengthStart = SlapStateController(action.state).getStrength(
-            address(this),
-            action.from._tokenId
-        );
-        require(strengthStart > 0, "not strong enough to commit");
-        _sendAction(action);
+        if (action.selector == SLAP_SELECTOR) {
+            _sendSlap(action);
+        }
     }
 
     function onActionReceived(Action calldata action, uint256 _nonce)
@@ -115,59 +100,44 @@ contract Willies is ERCxxxx, ERC721 {
         override
         onlyReceivableAction(action, _nonce)
     {
-        uint256 strengthStart = SlapStateController(action.state).getStrength(
-            address(this),
-            action.to._tokenId
-        );
-        require(
-            strengthStart >
-                SlapStateController(action.state).getStrength(
-                    address(action.from._address),
-                    action.from._tokenId
-                ),
-            "sender weaker than receiver"
-        );
-
-        // Pass action to state receiver
-        _onActionReceived(action, _nonce);
+        if (action.selector == SLAP_SELECTOR) {
+            _onSlapReceived(action, _nonce);
+        }
     }
 
-    function tokenURI(uint256 tokenId)
+    /// Off-chain BAYC service listens for `ActionReceived` events and updates
+    /// the render based on the `TokenSlapState` of the token's default `SlapStateController`.
+    function getDefaultTokenSlapStateController(uint256 tokenId)
         public
         view
-        override
-        returns (string memory)
+        returns (address)
     {
-        address stateController = getDefaultTokenStateController(tokenId);
-        SlapStateController.TokenSlapState state = SlapStateController(
-            stateController
-        ).getState(address(this), tokenId);
-        string memory face = defaultFace;
-        if (state == SlapStateController.TokenSlapState.DEAD) {
-            face = deadFace;
-        } else if (state == SlapStateController.TokenSlapState.WINNER) {
-            face = winningFace;
-        } else if (state == SlapStateController.TokenSlapState.SLAPPED) {
-            face = slappedFace;
+        if (tokenSlapStateController[tokenId] != address(0)) {
+            return tokenSlapStateController[tokenId];
         }
-        string
-            memory img = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 400 350"><style>.willy{ fill: white; font-family: serif; font-size: 60px; }</style><rect width="100%" height="100%" fill="#000000" /><text x="14" y="24" class="base">';
+        return defaultSlapStateController;
+    }
 
-        img = string.concat(img, face);
-        img = string.concat(img, "</text></svg>");
-        string memory json = Base64.encode(
-            bytes(
-                string(
-                    abi.encodePacked(
-                        '{"name": "Gate #',
-                        Strings.toString(tokenId),
-                        '", "description": "Willies like to slap and be slapped.", "image": "data:image/svg+xml;base64,',
-                        Base64.encode(bytes(img)),
-                        '"}'
-                    )
-                )
-            )
+    function setDefaultTokenSlapStateController(
+        uint256 tokenId,
+        address stateController
+    ) external {
+        require(IERC721(bayc).ownerOf(tokenId) == msg.sender, "not owner");
+        tokenSlapStateController[tokenId] = stateController;
+        emit StateControllerUpdate(tokenId, "slap", stateController);
+    }
+
+    function _sendSlap(Action memory action) private {
+        uint256 strengthStart = SlapStateController(action.state).getStrength(
+            address(bayc),
+            action.to._tokenId
         );
-        return string(abi.encodePacked("data:application/json;base64,", json));
+        require(strengthStart > 0, "dead ape");
+
+        _sendAction(action);
+    }
+
+    function _onSlapReceived(Action calldata action, uint256 _nonce) private {
+        _onActionReceived(action, _nonce);
     }
 }

@@ -10,15 +10,21 @@ pragma solidity ^0.8.0;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERCxxxxSender, IERCxxxxReceiver, Action} from "../interfaces/IERCxxxx.sol";
 import "../common/Controllable.sol";
 import "../common/EnumerableBytes4Set.sol";
+import {ProxyClient} from "./ProxyClient.sol";
 
-contract ERCxxxxState is Controllable, IERCxxxxReceiver {
+contract ERCxxxxState is Controllable, IERCxxxxReceiver, ProxyClient, Ownable {
     using Address for address;
     using EnumerableBytes4Set for EnumerableBytes4Set.Set;
 
     EnumerableBytes4Set.Set private _receivableActions;
+
+    function setProxyRegistry(address registry) external virtual onlyOwner {
+        _setProxyRegistry(registry);
+    }
 
     function onActionReceived(Action calldata action, uint256 nonce)
         external
@@ -43,11 +49,15 @@ contract ERCxxxxState is Controllable, IERCxxxxReceiver {
             "ERCxxxx: invalid action"
         );
         require(action.state == address(this), "ERCxxxx: invalid state");
+        require(
+            action.user == address(0) || action.user == tx.origin,
+            "ERCxxxx: invalid user"
+        );
 
         address expectedSender = action.to._address;
         if (expectedSender == address(0)) {
             if (action.from._address != address(0)) {
-                expectedSender = action.from._address;
+                expectedSender = getManager(action.from._address);
             } else {
                 expectedSender = action.user;
             }
@@ -75,6 +85,7 @@ contract ERCxxxxState is Controllable, IERCxxxxReceiver {
                     )
                 )
             );
+            address _from = getManager(action.from._address);
             try
                 IERCxxxxSender(action.from._address).isValid(actionHash, nonce)
             returns (bool ok) {

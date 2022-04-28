@@ -11,7 +11,7 @@ pragma solidity ^0.8.0;
 import "./ERCxxxxSender.sol";
 import "./ERCxxxxReceiver.sol";
 
-contract ERCxxxxProxyRegistry {
+contract ERCxxxxTempProxyRegistry {
     mapping(address => address) _lookup;
     mapping(address => address) _reverseLookup;
 

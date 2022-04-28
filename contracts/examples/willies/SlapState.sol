@@ -1,31 +1,92 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/**********************************************************\
+/*
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
 * EIP-xxxx Token Interaction Standard: [tbd]
 *
 * Implementation of an interactive token protocol.
-/**********************************************************/
+
+                                                                              /&&&%%%&&&&&&&.                           
+                                                                            /%&@&%&ҹ%%%%&&&&&@.                         
+                                                                           /%&&%&%%ҹҹ%ҹ%%&&%&&@                         
+                                                                           ҹ(%%ҹҹҹҹҹҹҹ%ҹҹҹ%&&&&                         
+                                                                           (ҹҹҹ((ҹҹҹ(ҹҹ(ҹ%%%&&%                         
+                                                                           (((ҹ✶((//(((ҹҹҹ%%&&                          
+                                                                           .((((✶///////(((ҹҹ%                          
+                                                                            ҹ((ҹҹ/✶///✶✶//(ҹҹҹ                          
+                                                                            ҹҹҹ((/✶✶/✶✶✶✶// .,.                         
+                                                               ,✶✶✶✶✶/,✶   (@@&ҹ(/✶.         (&                         
+                                                              ✶✶✶✶✶✶✶(,✶,%%&%&         &%%%%&&&&                        
+                                                            ,,✶✶✶,,,✶/,/&%ҹҹ%     ,%%%&&%&&&&&&&&/                      
+                                                             ✶✶✶✶✶✶,✶✶/ҹҹҹ&%, ✶&&&%%%&&&&&&&&&&&&&✶                     
+                                                      ✶(ҹҹ%(%✶,,,,,✶✶/ҹҹҹ%@%%%&&&&&%%%&&&&&&&&&&&&                      
+                                                (ҹҹ%%&%%%%&%%%&&%%&(✶@%/&%&@&%&&&&&&&%%&&&&&&&&&&&                      
+                                           (ҹ%%%%%%%%%&%%%&%%&&%%&&&&@&@@&%%@&&&&&&&&&%&&%%&&&&&&&                      
+                                     .ҹҹ%%%%%%%%%%%%%%%%@&&%%%%%%%&&&@%%&&&@%&&&&&%%%&%%&%%&&@&@@@                      
+                                 %ҹ%%%%%%%%%%%%%&&&&&&&&&&&%%&&&%%%&&&&&&%%&&&&&&%&%%%%&&&&&&&&@&&                      
+                            ✶  %%%%%%%%%%%&&&&&&&&%%,    ✶%%%&&%%&%&&&%%%&&&&&%%%%&%&&&&&&&&&&&@@@                      
+         ✶✶/✶✶✶✶✶✶✶✶✶✶✶✶✶✶/✶/✶, ✶%&&&&&&&&&&/             %&&%%%&&&&%%&&&%%%%%%&%&&&&&&&&&&&&&&@@✶                      
+         ✶✶✶✶,✶✶✶✶✶✶✶,✶✶✶✶//(((,✶&&&&&                    &&%%%%%ҹ%%&&&&%%&%%%%%&&&&&&&&&&&&@@@@&                       
+           ..       ✶✶/✶✶✶/((    &&                       %&&%&%&%%%%%%%%%%%&&&&&&&&&&&&&@@&@@@@ҹ,                      
+                      .                                   (&&&%%%%%%%%%%&&&&&&&&&&&&&&@&&&&&@@@&&%%%%%%/                
+                                                           &&&%%&&&%&%&&&&&&&&&&@@&&&&&@&&&&&&&&%%%%ҹҹ%ҹҹ%ҹҹҹҹ          
+                                                          %&&&&&&&&&&&&&&&@@@&&&&&&&&&&&&&&&&&&&&&&%%%%%%%%%%%%%ҹ       
+                                                          %@@@&&@&@&@@@@&&&&&&&&&&&&&&&&&&&&&&&&&&&%%%&%%%%&&&&&&&%     
+                                                         &&%&@@@&&&&@&%&&&&&&&&%&&&&&&&&&&%&&&&&&&&%%ҹҹ%&&&&&&&&&&&%    
+                                                        %&&&&%&&&&&&&&&&&&%%%&%&%&%&&&&&&&&&&@&&&@&%ҹ%&&&&&&&&&&&&&&    
+                                                       ✶%%&&&&&&&&&@@&&&&&&%&&&&&&&&%&%&&&&&&&&&&ҹ%&&&&&&&&&&&&&&&&&&   
+                                                       &%%&&%&&%%&%%%&%%&%%&&&&&&&&&%%&%&&@&&&&&&&&&&%%&&&&%%&&&&&&&&   
+                                                      /&&&&%%%%%%%%%%%%&&%%%%%%%&&&%&&&&&&&&&&&&&&@&&&&%%&&&&ҹ,.        
+                                                      &&&&&%%%%%%%%&&&%%%%%&%%%%&&&&&&&%&&&&&&&&&&&&&@&%                
+                                                      &%%%%%%%%%%%%%%&&&&&&&&&&&&&&&&&&&&&&&&&@@@@@&&@@&&               
+                                                      %%%%%%%%%&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&@&@@&&&&@&&%             
+                                                      ҹ%%%%%%&&&&&&&&&&&&&&&&&&@@&&&&&&&&&&&&&@@@&&&&&@&&&&&            
+                                                       %%%&%&&&&&&&&@&@@@&@@@&@@&&&&&&&&&&&&&@&&&&&&&@&&&&&,            
+                                                       &%&&&&&&&&&&&@@&@@&&@&@@&&&&&&&&&&&&&&&@&&&&&&&&&                
+
+*/
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "../../interfaces/IERCxxxx.sol";
-import "../../standard/ERCxxxxState.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Action, Object} from "../../interfaces/IERCxxxx.sol";
+import {ERCxxxxState} from "../../proxy/ERCxxxxState.sol";
 
-interface IStateExample {
+interface SlapStateController {
+    enum TokenSlapState {
+        DEFAULT,
+        SLAPPED,
+        WINNER,
+        DEAD
+    }
+
+    struct TokenStats {
+        uint256 strength;
+        TokenSlapState state;
+    }
+
     function registerToken(address _contract, uint256 tokenId) external;
+
+    function get(address _contract, uint256 tokenId)
+        external
+        view
+        returns (TokenStats memory);
 
     function getStrength(address _contract, uint256 tokenId)
         external
         view
         returns (uint256);
+
+    function getState(address _contract, uint256 tokenId)
+        external
+        view
+        returns (TokenSlapState);
 }
 
-contract SlapState is ERCxxxxState, Ownable {
+contract SlapState is ERCxxxxState, SlapStateController {
     using Address for address;
 
-    mapping(address => mapping(uint256 => uint256)) tokenStrengths;
+    mapping(address => mapping(uint256 => TokenStats)) stats;
 
     bytes4 constant SLAP_SELECTOR = bytes4(keccak256("slap"));
 
@@ -33,14 +94,23 @@ contract SlapState is ERCxxxxState, Ownable {
         _registerReceivable(SLAP_SELECTOR);
     }
 
+    function get(address _contract, uint256 tokenId)
+        external
+        view
+        returns (TokenStats memory)
+    {
+        return stats[_contract][tokenId];
+    }
+
     function registerToken(address _contract, uint256 tokenId) external {
         require(
-            tokenStrengths[_contract][tokenId] == 0,
+            stats[_contract][tokenId].strength == 0,
             "State: already registered"
         );
-        tokenStrengths[_contract][tokenId] =
-            (_random(_contract, tokenId) % 20) +
-            4;
+        stats[_contract][tokenId] = TokenStats(
+            (_random(_contract, tokenId) % 20) + 4,
+            TokenSlapState.DEFAULT
+        );
     }
 
     function getStrength(address _contract, uint256 tokenId)
@@ -48,7 +118,15 @@ contract SlapState is ERCxxxxState, Ownable {
         view
         returns (uint256)
     {
-        return tokenStrengths[_contract][tokenId];
+        return stats[_contract][tokenId].strength;
+    }
+
+    function getState(address _contract, uint256 tokenId)
+        external
+        view
+        returns (TokenSlapState)
+    {
+        return stats[_contract][tokenId].state;
     }
 
     function onActionReceived(Action calldata action, uint256 _nonce)
@@ -63,41 +141,61 @@ contract SlapState is ERCxxxxState, Ownable {
             "State: invalid to and from"
         );
 
-        uint256 fromStrength = tokenStrengths[action.from._address][
-            action.from._tokenId
-        ];
-        uint256 toStrength = tokenStrengths[action.to._address][
-            action.to._tokenId
-        ];
-        require(fromStrength > 0 && toStrength > 0, "0 strength token");
+        TokenStats memory fromStats = _get(action.from);
+        TokenStats memory toStats = _get(action.to);
+        require(
+            fromStats.strength > 0 && toStats.strength > 0,
+            "0 strength token"
+        );
 
         uint256 val = (_random(action.from._address, action.from._tokenId) %
-            (fromStrength + toStrength)) + 1;
+            (fromStats.strength + toStats.strength)) + 1;
 
         // Relative strength determines likelihood of a win.
-        if (val < fromStrength) {
+        if (val == fromStats.strength) {
+            // tie
+            stats[action.from._address][action.from._tokenId]
+                .state = TokenSlapState.DEFAULT;
+            stats[action.to._address][action.to._tokenId].state = TokenSlapState
+                .DEFAULT;
+        } else if (val < fromStats.strength) {
             // sender wins!
-            uint256 delta = fromStrength - val;
-            fromStrength += delta;
-            if (delta >= toStrength) {
-                toStrength = 0;
+            uint256 delta = fromStats.strength - val;
+            fromStats.strength += delta;
+            fromStats.state = TokenSlapState.WINNER;
+            _set(action.from, fromStats);
+            if (delta >= toStats.strength) {
+                toStats.strength = 0;
+                toStats.state = TokenSlapState.DEAD;
             } else {
-                toStrength -= delta;
+                toStats.strength -= delta;
+                toStats.state = TokenSlapState.SLAPPED;
             }
+            _set(action.to, toStats);
         } else {
             // receiver wins!
-            uint256 delta = val - fromStrength;
-            toStrength += delta;
-            if (delta >= fromStrength) {
-                fromStrength = 0;
+            uint256 delta = val - fromStats.strength;
+            toStats.strength += delta;
+            toStats.state = TokenSlapState.WINNER;
+            _set(action.to, toStats);
+
+            if (delta >= toStats.strength) {
+                fromStats.strength = 0;
+                fromStats.state = TokenSlapState.DEAD;
             } else {
-                fromStrength -= delta;
+                fromStats.strength -= delta;
+                fromStats.state = TokenSlapState.SLAPPED;
             }
+            _set(action.from, fromStats);
         }
-        tokenStrengths[action.from._address][
-            action.from._tokenId
-        ] = fromStrength;
-        tokenStrengths[action.to._address][action.to._tokenId] = toStrength;
+    }
+
+    function _get(Object memory obj) internal view returns (TokenStats memory) {
+        return stats[obj._address][obj._tokenId];
+    }
+
+    function _set(Object memory obj, TokenStats memory _stats) internal {
+        stats[obj._address][obj._tokenId] = _stats;
     }
 
     function _random(address _contract, uint256 tokenId)
