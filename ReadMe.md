@@ -218,7 +218,7 @@ interface IERCxxxxInteractive {
 
 Action proxies can be used to support backwards compatibility with non-upgradeable contracts, and potentially for cross-chain action bridging.
 
-They can be implemented using a modified version of [ERC-1820](https://eips.ethereum.org/EIPS/eip-1820#erc-1820-registry-smart-contract) that allows contract owners to call `setManager()`.
+They can be implemented using a modified version of [ERC-1820](https://eips.ethereum.org/EIPS/eip-1820#erc-1820-registry-smart-contract) that allows [ERC-173](https://eips.ethereum.org/EIPS/eip-173) contract owners to call `setManager()`.
 
 #### Controllable
 
@@ -247,7 +247,7 @@ interface IControllable {
 
 ## Rationale
 
-There are many proposed uses for interactions with and between tokenized assets. Projects that are developing or have already developed such features include fully on-chain games like [Realms' cross-collection Quests](https://docs.bibliothecadao.xyz/lootverse-master-scroll/) and the fighting game [wrasslers](https://wrasslers.com/), and partially on-chain games like [Worldwide Webb](https://webb.game/) and [Axie Infinity[(https://axieinfinity.com/)]. It is critical in each of these cases that users are able to commit actions on and across tokenized assets. Regardless of the nature of these actions, the ecosystem will be stronger if we have a standardized interface that allows for asset-defined action handling, open interaction systems, and cross-functional bridges.
+There are many proposed uses for interactions with and between tokenized assets. Projects that are developing or have already developed such features include fully on-chain games like [Realms' cross-collection Quests](https://docs.bibliothecadao.xyz/lootverse-master-scroll/) and the fighting game [wrasslers](https://wrasslers.com/), and partially on-chain games like [Worldwide Webb](https://webb.game/) and [Axie Infinity](https://axieinfinity.com/). It is critical in each of these cases that users are able to commit actions on and across tokenized assets. Regardless of the nature of these actions, the ecosystem will be stronger if we have a standardized interface that allows for asset-defined action handling, open interaction systems, and cross-functional bridges.
 
 ### Validation
 
@@ -266,7 +266,7 @@ Most importantly, the consensus among the developers surveyed is that strict use
 
 Actions are identified using function selectors (`bytes4(keccack256(action_key))`). This allows for efficient comparison operations on arbitrarily long action keys with simple namespacing (e.g. `"cast"` can become `"spells.cast"`) and sequence specification (e.g. `"land.settle>land.build"` indicating `"land.settle"` must be received before `"land.build"`).
 
-## State Contracts
+### State Contracts
 
 Moving state logic into dedicated, parameterized contracts makes state an action primitive and prevents state management from being obscured within the contracts. Specifically, it allows users to decide which "environment" to commit the action in, and allows the initiating and receiving contracts to share state data without requiring them to communicate.
 
