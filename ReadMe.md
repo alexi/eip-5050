@@ -18,6 +18,8 @@ A standard messaging protocol for interactive tokens.
 
 This standard defines a broadly applicable action messaging protocol for the transmission of arbitrary, user-initiated actions between contracts and tokens. Shared state contracts provide arbitration and settlement of the action process.
 
+For those who want to jump ahead to examples, you can find them [here](./contracts/examples).
+
 ## Motivation
 
 Tokenized item standards such as [ERC-721](./eip-721.md) and [ERC-1155](./eip-1155.md) serve as the objects of the Ethereum computing environment. The emerging metaverse games are processes that run on these objects. A standard action messaging protocol will allow these game processes to be developed in the same open, Ethereum-native way as the objects they run on.
@@ -284,11 +286,11 @@ Non-upgradeable, already deployed token contracts will not be compatible with th
 
 ## Test Cases
 
-Test cases are include in `../assets/eip-####/`.
+Test cases are include in [`./contracts/examples`](./contracts/examples).
 
 ## Reference Implementation
 
-Implementations are included in `../assets/eip-####/`.
+A reference implementation is included [here](./contracts/standard). There is also a [proxy-compatible implementation](./contracts/proxy).
 
 ## Security Considerations
 
