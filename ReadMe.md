@@ -16,20 +16,20 @@ A standard messaging protocol for interactive tokens.
 
 ## Abstract
 
-This standard defines a broadly applicable action messaging protocol for the transmission of arbitrary, user-initiated actions between contracts and tokens. Shared state contracts provide arbitration and logging of the action process.
+This standard defines a broadly applicable action messaging protocol for the transmission of arbitrary, user-initiated actions between contracts and tokens. Shared state contracts provide arbitration and settlement of the action process.
 
 ## Motivation
 
 Tokenized item standards such as [ERC-721](./eip-721.md) and [ERC-1155](./eip-1155.md) serve as the objects of the Ethereum computing environment. The emerging metaverse games are processes that run on these objects. A standard action messaging protocol will allow these game processes to be developed in the same open, Ethereum-native way as the objects they run on.
 
-The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. It is paired with a common interface for defining functionality that allows off-chain services to aggregate and query supported contracts for interoperability. Contracts that implement this standard can be automatically discovered and used by user interfaces, creating a network of interactive token contracts.
+The messaging protocol outlined defines how an action is initiated and transmitted between tokens and shared state environments. It is paired with a common interface for defining functionality that allows off-chain services to aggregate and query supported contracts for interoperability, creating an open network of interactive token contracts. Not only can contracts that implement this standard be automatically discovered by such services, their *interaction policies* can be as well. This allows clients to easily surface compatible senders and receivers for a given action or set of actions.
 
-Aggregators can also parse action event logs to derive analytics on which contracts users are likely to interact with, what state contracts to use with certain contracts and action types, trending/popular/new action contracts, and more to dramatically improve the user experience.
+Aggregators can also parse action event logs to derive analytics on new action types, trending/popular/new interactive contracts, which contract and state-pairs users are likely to interact with, and other discovery tools to facilitate interaction.
 
 ### Benefits
-1. Make interactive token contracts discoverable and usable by metaverse/game applications
-2. Allow for generalized action bridges to transmit actions between chains (enabling actions on L1 assets to be saved to L2s, and for cross-chain asset interactions).
-3. Provide a simple solution for developers to make dynamic NFTs and other tokens
+1. Make interactive token contracts **discoverable and usable** by metaverse/game applications
+2. Allow for generalized action bridges to transmit actions between chains (enabling actions on L1 assets to be saved to L2s, and L1 assets to interact with L2 assets).
+3. Provide a simple solution with viable validity guarantees for developers to make dynamic NFTs and other tokens
 4. Promote decentralized, collaborative game building
 
 ## Specification

@@ -52,7 +52,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Action, Object} from "../../interfaces/IERCxxxx.sol";
 import {ERCxxxxState} from "../../proxy/ERCxxxxState.sol";
 
-interface SlapStateController {
+interface ISlapState {
     enum TokenSlapState {
         DEFAULT,
         SLAPPED,
@@ -83,7 +83,7 @@ interface SlapStateController {
         returns (TokenSlapState);
 }
 
-contract SlapState is ERCxxxxState, SlapStateController {
+contract SlapState is ERCxxxxState, ISlapState {
     using Address for address;
 
     mapping(address => mapping(uint256 => TokenStats)) stats;

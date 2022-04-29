@@ -22,31 +22,11 @@ contract Spells is ERCxxxx, ERC721, Ownable {
     bytes4 constant ATTUNE_SELECTOR = bytes4(keccak256("attune"));
 
     mapping(uint256 => uint256) spellDust;
-    mapping(address => string) attunementRegistry;
-    mapping(uint256 => address) attunement;
+    mapping(uint256 => string) attunement;
 
     constructor() ERC721("Spells", unicode"🔮") {
         _registerSendable(CAST_SELECTOR);
         _registerReceivable(ATTUNE_SELECTOR);
-    }
-
-    /// @dev Set unicode character "attunement" value for the given contract.
-    /// Only callable by the contract owner.
-    function setAttunement(address _contract, bytes32 _attunement) external {
-        (bool ok, bytes memory _data) = _contract.staticcall(
-            abi.encodeWithSignature("owner()")
-        );
-        require(ok, "Spells: not ok");
-        require(
-            msg.sender == abi.decode(_data, (address)),
-            "Spells: invalid sender"
-        );
-        string memory unicodeChar;
-        assembly {
-            // Get first 6 bytes (format: \uXXXX)
-            unicodeChar := shr(208, _attunement)
-        }
-        attunementRegistry[_contract] = unicodeChar;
     }
 
     function sendAction(Action memory action)
@@ -70,7 +50,13 @@ contract Spells is ERCxxxx, ERC721, Ownable {
     {
         // Pass action to state receiver
         if (action.selector == ATTUNE_SELECTOR) {
-            attunement[action.to._tokenId] = action.from._address;
+            string memory unicodeChar;
+            bytes memory _data = action.data;
+            assembly {
+                // Get first 6 bytes (\uXXXX)
+                unicodeChar := shr(208, _data)
+            }
+            attunement[action.to._tokenId] = unicodeChar;
         }
         _onActionReceived(action, _nonce);
     }
@@ -107,11 +93,15 @@ contract Spells is ERCxxxx, ERC721, Ownable {
         string[16] memory canvas = _dustCanvas(tokenId);
         string
             memory out = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 400 350"><style>.base { fill: lightyellow; font-family: serif; font-size: 14px; } .chant { font-style: italic;} .dust {font-family: monospace; font-size: 8px; letter-spacing:5px;}.sm{font-size: 10px;} .sigil{font-family: monospace, font-size:13}</style><rect width="100%" height="100%" fill="#171717" /><text x="14" y="24" class="base">';
+
         out = string.concat(
             out,
-            string.concat(spells[_spellType(tokenId)], " Spell")
+            string.concat(spells[_spellType(tokenId)], " Spell"),
+            '</text><text x="376" y="336" class="base sigil">',
+            attunement[tokenId]
         );
 
+        // Add dust canvas
         uint256 i;
         for (i = 0; i < 16; i++) {
             out = string(

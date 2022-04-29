@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../../standard/ERCxxxx.sol";
 
-contract Wizards is ERCxxxx, ERC721, Ownable {
+contract Witches is ERCxxxx, ERC721, Ownable {
     bytes4 constant CAST_SELECTOR = bytes4(keccak256("cast"));
     bytes4 constant ATTUNE_SELECTOR = bytes4(keccak256("attune"));
 
@@ -22,10 +22,39 @@ contract Wizards is ERCxxxx, ERC721, Ownable {
     mapping(uint256 => uint256) lastEnchanter;
     mapping(uint256 => uint256) lastEnchantedBlock;
 
-    constructor(address _spells) ERC721("Willies", unicode"🏆") {
+    string[8] private covens = [
+        unicode"☰", // TRIGRAM FOR HEAVEN
+        unicode"☱", // TRIGRAM FOR LAKE
+        unicode"☲", // TRIGRAM FOR FIRE
+        unicode"☳", // TRIGRAM FOR THUNDER
+        unicode"☴", // TRIGRAM FOR WIND
+        unicode"☵", // TRIGRAM FOR WATER
+        unicode"☶", // TRIGRAM FOR MOUNTAIN
+        unicode"☷" // TRIGRAM FOR EARTH
+    ];
+
+    constructor(address _spells) ERC721("Witches", unicode"⏾") {
         spells = _spells;
         _registerReceivable(CAST_SELECTOR);
         _registerSendable(ATTUNE_SELECTOR);
+    }
+
+    function sendAction(Action memory action)
+        external
+        payable
+        override
+        onlySendableAction(action)
+    {
+        require(
+            msg.sender == ownerOf(action.from._tokenId),
+            "Witches: sender not owner"
+        );
+        action.data = abi.encodePacked(
+            covens[
+                _random(Strings.toString(action.from._tokenId)) % covens.length
+            ]
+        );
+        _sendAction(action);
     }
 
     function onActionReceived(Action calldata action, uint256 _nonce)
@@ -71,7 +100,7 @@ contract Wizards is ERCxxxx, ERC721, Ownable {
         img = string.concat(img, background);
         img = string.concat(
             img,
-            unicode'"/><text x="14" y="24" class="base">🧙</text></svg>'
+            unicode'"/><text x="14" y="24" class="base">🧙‍♀️</text></svg>'
         );
         string memory json = Base64.encode(
             bytes(

@@ -47,7 +47,7 @@ pragma solidity ^0.8.13;
 
 */
 
-import {SlapStateController} from "./SlapState.sol";
+import {ISlapState} from "./SlapState.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERCxxxx, Action} from "../../proxy/ERCxxxx.sol";
@@ -128,7 +128,7 @@ contract ApesProxy is ERCxxxx {
     }
 
     function _sendSlap(Action memory action) private {
-        uint256 strengthStart = SlapStateController(action.state).getStrength(
+        uint256 strengthStart = ISlapState(action.state).getStrength(
             address(bayc),
             action.to._tokenId
         );
