@@ -16,7 +16,7 @@ A standard messaging protocol for interactive tokens.
 
 ## Abstract
 
-This standard defines a broadly applicable action messaging protocol for the transmission of arbitrary, user-initiated actions between contracts and tokens. Shared state contracts provide arbitration and settlement of the action process.
+This standard defines a broadly applicable action messaging protocol for the transmission of arbitrary, user-initiated actions between tokens. Modular statefulness is achieved with parameterized state contracts that can provide arbitration and settlement of the action process.
 
 ## Motivation
 
