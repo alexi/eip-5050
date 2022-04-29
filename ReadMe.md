@@ -18,8 +18,6 @@ A standard messaging protocol for interactive tokens.
 
 This standard defines a broadly applicable action messaging protocol for the transmission of arbitrary, user-initiated actions between contracts and tokens. Shared state contracts provide arbitration and settlement of the action process.
 
-For those who want to jump ahead to examples, you can find them [here](./contracts/examples).
-
 ## Motivation
 
 Tokenized item standards such as [ERC-721](./eip-721.md) and [ERC-1155](./eip-1155.md) serve as the objects of the Ethereum computing environment. The emerging metaverse games are processes that run on these objects. A standard action messaging protocol will allow these game processes to be developed in the same open, Ethereum-native way as the objects they run on.
@@ -33,6 +31,13 @@ Aggregators can also parse action event logs to derive analytics on new action t
 2. Allow for generalized action bridges to transmit actions between chains (enabling actions on L1 assets to be saved to L2s, and L1 assets to interact with L2 assets).
 3. Provide a simple solution with viable validity guarantees for developers to make dynamic NFTs and other tokens
 4. Promote decentralized, collaborative game building
+
+### Examples | What you can do with this
+
+Toy examples of how this protocol works are provided in [`./contracts/examples`](./contracts/examples).
+
+1. [Willies](./contracts/examples/willies): Slap or be slapped! A stateful, proxy-compatible game of passion played on the world's most public stage: the blockchain!
+2. [Spells](./contracts/examples/spells): A simple game of magic. Cast spells on witches, attune spells to your witch's coven.
 
 ## Specification
 
