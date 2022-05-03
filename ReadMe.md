@@ -175,7 +175,7 @@ struct Object {
     uint256 _tokenId;
 }
 
-/// @param name The name of the action
+/// @param selector The bytes4(keccack256()) encoding of the action string
 /// @param user The address of the sender
 /// @param from The initiating object
 /// @param to The receiving object
