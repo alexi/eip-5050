@@ -3,18 +3,18 @@ pragma solidity ^0.8.0;
 
 /**********************************************************\
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Token Interaction Standard: [tbd]
+* EIP-5050 Token Interaction Standard: [tbd]
 *
 * Implementation of an interactive token protocol.
 /**********************************************************/
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {IERCxxxxSender, IERCxxxxReceiver, Action} from "../interfaces/IERCxxxx.sol";
+import {IERC5050Sender, IERC5050Receiver, Action} from "../interfaces/IERC5050.sol";
 import "../common/Controllable.sol";
 import "../common/EnumerableBytes4Set.sol";
 
-contract ERCxxxxReceiver is Controllable, IERCxxxxReceiver {
+contract ERC5050Receiver is Controllable, IERC5050Receiver {
     using Address for address;
     using EnumerableBytes4Set for EnumerableBytes4Set.Set;
 
@@ -26,21 +26,21 @@ contract ERCxxxxReceiver is Controllable, IERCxxxxReceiver {
         }
         require(
             action.to._address == address(this),
-            "ERCxxxx: invalid receiver"
+            "ERC5050: invalid receiver"
         );
         require(
             _receivableActions.contains(action.selector),
-            "ERCxxxx: invalid action"
+            "ERC5050: invalid action"
         );
         require(
             action.from._address == address(0) ||
                 action.from._address == msg.sender,
-            "ERCxxxx: invalid sender"
+            "ERC5050: invalid sender"
         );
         require(
             (action.from._address != address(0) && action.user == tx.origin) ||
                 action.user == msg.sender,
-            "ERCxxxx: invalid sender"
+            "ERC5050: invalid sender"
         );
         _;
     }
@@ -65,14 +65,14 @@ contract ERCxxxxReceiver is Controllable, IERCxxxxReceiver {
     {
         if (!_isApprovedController(msg.sender, action.selector)) {
             if (action.state != address(0)) {
-                require(action.state.isContract(), "ERCxxxx: invalid state");
+                require(action.state.isContract(), "ERC5050: invalid state");
                 try
-                    IERCxxxxReceiver(action.state).onActionReceived{
+                    IERC5050Receiver(action.state).onActionReceived{
                         value: msg.value
                     }(action, nonce)
                 {} catch (bytes memory reason) {
                     if (reason.length == 0) {
-                        revert("ERCxxxx: call to non ERCxxxxReceiver");
+                        revert("ERC5050: call to non ERC5050Receiver");
                     } else {
                         assembly {
                             revert(add(32, reason), mload(reason))

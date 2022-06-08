@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /*
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Token Interaction Standard: [tbd]
+* EIP-5050 Token Interaction Standard: [tbd]
 *
 * Implementation of an interactive token protocol.
 
@@ -49,8 +49,8 @@ pragma solidity ^0.8.0;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Action, Object} from "../../interfaces/IERCxxxx.sol";
-import {ERCxxxxState} from "../../proxy/ERCxxxxState.sol";
+import {Action, Object} from "../../interfaces/IERC5050.sol";
+import {ERC5050State} from "../../proxy/ERC5050State.sol";
 
 interface ISlapState {
     enum TokenSlapState {
@@ -83,7 +83,7 @@ interface ISlapState {
         returns (TokenSlapState);
 }
 
-contract SlapState is ERCxxxxState, ISlapState {
+contract SlapState is ERC5050State, ISlapState {
     using Address for address;
 
     mapping(address => mapping(uint256 => TokenStats)) stats;

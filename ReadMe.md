@@ -1,5 +1,5 @@
 ---
-eip:
+eip: 5050
 title: Token Interaction Standard
 description: A standard action messaging protol for interactions on and between NFTs
 author: Alexi (@0xalxi)
@@ -8,6 +8,7 @@ type: Standards Track
 category: ERC
 status: Draft
 created: 2021-4-18
+requires: 173, 721, 1155, 1820
 ---
 
 ## Simple Summary
@@ -46,9 +47,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 ```solidity
 pragma solidity ^0.8.0;
 
-/// @title ERC-xxxx Token Interaction Standard
+/// @title ERC-5050 Token Interaction Standard
 /// @dev See https://eips.ethereum.org/EIPS/eip-xxx
-interface IERCxxxxSender {
+interface IERC5050Sender {
     /// @notice Send an action to the target address
     /// @dev The action's `fromContract` is automatically set to `address(this)`,
     /// and the `from` parameter is set to `msg.sender`.
@@ -142,7 +143,7 @@ interface IERCxxxxSender {
     );
 }
 
-interface IERCxxxxReceiver {
+interface IERC5050Receiver {
     /// @notice Handle an action
     /// @dev Both the `to` contract and `state` contract are called via
     /// `onActionReceived()`.
@@ -216,7 +217,7 @@ Some contracts may have custom user interfaces that facilitate interaction.
 ```solidity
 pragma solidity ^0.8.0;
 
-interface IERCxxxxInteractive {
+interface IERC5050Interactive {
     function interfaceURI(bytes4 _action) external view returns (string);
 }
 ```

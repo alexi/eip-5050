@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 /**********************************************************\
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Token Interaction Standard: [tbd]
+* EIP-5050 Token Interaction Standard: [tbd]
 *
 * Implementation of an interactive token protocol.
 /**********************************************************/
@@ -12,10 +12,10 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {ERCxxxx, Action, Strings} from "../../standard/ERCxxxx.sol";
+import {ERC5050, Action, Strings} from "../../standard/ERC5050.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Spells is ERCxxxx, ERC721, Ownable {
+contract Spells is ERC5050, ERC721, Ownable {
     using SafeMath for uint256;
 
     bytes4 constant CAST_SELECTOR = bytes4(keccak256("cast"));
@@ -53,7 +53,7 @@ contract Spells is ERCxxxx, ERC721, Ownable {
             string memory unicodeChar;
             bytes memory _data = action.data;
             assembly {
-                // Get first 6 bytes (\uXXXX)
+                // Get first 6 bytes (\u5050)
                 unicodeChar := shr(208, _data)
             }
             attunement[action.to._tokenId] = unicodeChar;

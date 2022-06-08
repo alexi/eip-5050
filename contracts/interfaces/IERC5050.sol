@@ -3,14 +3,14 @@ pragma solidity ^0.8.0;
 
 /**********************************************************\
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Token Interaction Standard: [tbd]
+* EIP-5050 Token Interaction Standard: [tbd]
 *
 * Implementation of an interactive token protocol.
 /**********************************************************/
 
-/// @title ERC-xxxx Token Interaction Standard
+/// @title ERC-5050 Token Interaction Standard
 /// @dev See https://eips.ethereum.org/EIPS/eip-xxx
-interface IERCxxxxSender {
+interface IERC5050Sender {
     /// @notice Send an action to the target address
     /// @dev The action's `fromContract` is automatically set to `address(this)`,
     /// and the `from` parameter is set to `msg.sender`.
@@ -26,7 +26,7 @@ interface IERCxxxxSender {
     /// and verifies it and nonce with the `fromContract`.
     /// @param _hash The hash to validate
     /// @param _nonce The nonce to validate
-    function isValid(uint256 _hash, uint256 _nonce) external returns (bool);
+    function isValid(bytes32 _hash, uint256 _nonce) external returns (bool);
 
     /// @notice Retrieve list of actions that can be sent.
     /// @dev Intended for use by off-chain applications to query compatible contracts.
@@ -48,7 +48,7 @@ interface IERCxxxxSender {
     /// @notice Enable or disable approval for a third party ("operator") to conduct
     ///  all actions on behalf of `msg.sender`
     /// @dev Emits the ApprovalForAll event. The contract MUST allow
-    ///  multiple operators per owner.
+    ///  an unbounded number of operators per owner.
     /// @param _operator Address to add to the set of authorized operators
     /// @param _approved True if the operator is approved, false to revoke approval
     function setApprovalForAllActions(address _operator, bool _approved)
@@ -104,7 +104,7 @@ interface IERCxxxxSender {
     );
 }
 
-interface IERCxxxxReceiver {
+interface IERC5050Receiver {
     /// @notice Handle an action
     /// @dev Both the `to` contract and `state` contract are called via
     /// `onActionReceived()`.
@@ -137,7 +137,7 @@ struct Object {
     uint256 _tokenId;
 }
 
-/// @param name The name of the action
+/// @param selector The bytes4(keccack256()) encoding of the action string
 /// @param user The address of the sender
 /// @param from The initiating object
 /// @param to The receiving object

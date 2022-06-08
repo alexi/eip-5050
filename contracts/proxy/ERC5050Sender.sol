@@ -3,28 +3,34 @@ pragma solidity ^0.8.0;
 
 /**********************************************************\
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Token Interaction Standard: [tbd]
+* EIP-5050 Token Interaction Standard: [tbd]
 *
 * Implementation of an interactive token protocol.
 /**********************************************************/
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {IERCxxxxSender, IERCxxxxReceiver, Action} from "../interfaces/IERCxxxx.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC5050Sender, IERC5050Receiver, Action} from "../interfaces/IERC5050.sol";
 import "../common/Controllable.sol";
 import "../common/EnumerableBytes4Set.sol";
+import {ProxyClient} from "./ProxyClient.sol";
 
-contract ERCxxxxSender is Controllable, IERCxxxxSender {
+contract ERC5050Sender is Controllable, IERC5050Sender, ProxyClient, Ownable {
     using Address for address;
     using EnumerableBytes4Set for EnumerableBytes4Set.Set;
 
-    EnumerableBytes4Set.Set _sendableActions;
+    EnumerableBytes4Set.Set private _sendableActions;
 
     uint256 private _nonce;
-    uint256 private _hash;
+    bytes32 private _hash;
 
     mapping(address => mapping(bytes4 => address)) actionApprovals;
     mapping(address => mapping(address => bool)) operatorApprovals;
+
+    function setProxyRegistry(address registry) external virtual onlyOwner {
+        _setProxyRegistry(registry);
+    }
 
     function sendAction(Action memory action)
         external
@@ -35,7 +41,7 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
         _sendAction(action);
     }
 
-    function isValid(uint256 actionHash, uint256 nonce)
+    function isValid(bytes32 actionHash, uint256 nonce)
         external
         view
         returns (bool)
@@ -53,11 +59,16 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
         }
         require(
             _sendableActions.contains(action.selector),
-            "ERCxxxx: invalid action"
+            "ERC5050: invalid action"
         );
         require(
             _isApprovedOrSelf(action.user, action.selector),
-            "ERCxxxx: unapproved sender"
+            "ERC5050: unapproved sender"
+        );
+        require(
+            action.from._address == address(this) ||
+                getManager(action.from._address) == address(this),
+            "ERC5050: invalid from address"
         );
         _;
     }
@@ -67,12 +78,12 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
         bytes4 _action,
         address _approved
     ) public virtual override returns (bool) {
-        require(_approved != _account, "ERCxxxx: approve to caller");
+        require(_approved != _account, "ERC5050: approve to caller");
 
         require(
             msg.sender == _account ||
                 isApprovedForAllActions(_account, msg.sender),
-            "ERCxxxx: approve caller is not account nor approved for all"
+            "ERC5050: approve caller is not account nor approved for all"
         );
 
         actionApprovals[_account][_action] = _approved;
@@ -86,7 +97,7 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
         virtual
         override
     {
-        require(msg.sender != _operator, "ERCxxxx: approve to caller");
+        require(msg.sender != _operator, "ERC5050: approve to caller");
 
         operatorApprovals[msg.sender][_operator] = _approved;
 
@@ -111,7 +122,6 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
 
     function _sendAction(Action memory action) internal {
         if (!_isApprovedController(msg.sender, action.selector)) {
-            action.from._address = address(this);
             bool toIsContract = action.to._address.isContract();
             bool stateIsContract = action.state.isContract();
             address next;
@@ -126,8 +136,9 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
                 nonce = _nonce;
             }
             if (next.isContract()) {
+                next = getManager(next);
                 try
-                    IERCxxxxReceiver(next).onActionReceived{value: msg.value}(
+                    IERC5050Receiver(next).onActionReceived{value: msg.value}(
                         action,
                         nonce
                     )
@@ -154,7 +165,7 @@ contract ERCxxxxSender is Controllable, IERCxxxxSender {
 
     function _validate(Action memory action) internal {
         ++_nonce;
-        _hash = uint256(
+        _hash = bytes32(
             keccak256(
                 abi.encodePacked(
                     action.selector,

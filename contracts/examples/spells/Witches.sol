@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 /**********************************************************\
 * Author: alxi <chitch@alxi.nl> (https://twitter.com/0xalxi)
-* EIP-xxxx Token Interaction Standard: [tbd]
+* EIP-5050 Token Interaction Standard: [tbd]
 *
 * Implementation of an interactive token protocol.
 /**********************************************************/
@@ -12,9 +12,9 @@ import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../../standard/ERCxxxx.sol";
+import "../../standard/ERC5050.sol";
 
-contract Witches is ERCxxxx, ERC721, Ownable {
+contract Witches is ERC5050, ERC721, Ownable {
     bytes4 constant CAST_SELECTOR = bytes4(keccak256("cast"));
     bytes4 constant ATTUNE_SELECTOR = bytes4(keccak256("attune"));
 

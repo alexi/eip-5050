@@ -81,7 +81,7 @@ interface ISlapState {
 
 ## SlappedApes
 
-BAYC joins the frey with a proxy contract set by the original contract `owner()`. Both `Willis.sol` and `SlapState.sol` implement the [proxy-compatible version of `ERCxxxx`](https://github.com/alexi/action-protocol/tree/main/contracts/proxy). While the deployed version of this protocol will use a modified version of [ERC-1820](https://eips.ethereum.org/EIPS/eip-1820#erc-1820-registry-smart-contract) that allows [ERC-173](https://eips.ethereum.org/EIPS/eip-173) contract owners to call `setManager()`, a simpler `ERCxxxxProxyRegistry` is used for demonstration purposes.
+BAYC joins the frey with a proxy contract set by the original contract `owner()`. Both `Willis.sol` and `SlapState.sol` implement the [proxy-compatible version of `ERC5050`](https://github.com/alexi/action-protocol/tree/main/contracts/proxy). While the deployed version of this protocol will use a modified version of [ERC-1820](https://eips.ethereum.org/EIPS/eip-1820#erc-1820-registry-smart-contract) that allows [ERC-173](https://eips.ethereum.org/EIPS/eip-173) contract owners to call `setManager()`, a simpler `ERC5050ProxyRegistry` is used for demonstration purposes.
 
 ## Configurable State Read-Targets
 
