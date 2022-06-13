@@ -29,8 +29,9 @@ interface IERC5050Sender {
     function isValid(bytes32 _hash, uint256 _nonce) external returns (bool);
 
     /// @notice Retrieve list of actions that can be sent.
-    /// @dev Intended for use by off-chain applications to query compatible contracts.
-    function sendableActions() external view returns (bytes4[] memory);
+    /// @dev Intended for use by off-chain applications to query compatible contracts,
+    /// and to advertise functionality in human-readable form.
+    function sendableActions() external view returns (string[] memory);
 
     /// @notice Change or reaffirm the approved address for an action
     /// @dev The zero address indicates there is no approved address.
@@ -114,8 +115,9 @@ interface IERC5050Receiver {
         payable;
 
     /// @notice Retrieve list of actions that can be received.
-    /// @dev Intended for use by off-chain applications to query compatible contracts.
-    function receivableActions() external view returns (bytes4[] memory);
+    /// @dev Intended for use by off-chain applications to query compatible contracts,
+    /// and to advertise functionality in human-readable form.
+    function receivableActions() external view returns (string[] memory);
 
     /// @dev This emits when a valid action is received.
     event ActionReceived(

@@ -12,13 +12,13 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IERC5050Sender, IERC5050Receiver, Action} from "../interfaces/IERC5050.sol";
 import {Controllable} from "../common/Controllable.sol";
-import {EnumerableBytes4Set} from "../common/EnumerableBytes4Set.sol";
+import {ActionsSet} from "../common/ActionsSet.sol";
 
 contract ERC5050Sender is Controllable, IERC5050Sender {
     using Address for address;
-    using EnumerableBytes4Set for EnumerableBytes4Set.Set;
+    using ActionsSet for ActionsSet.Set;
 
-    EnumerableBytes4Set.Set _sendableActions;
+    ActionsSet.Set _sendableActions;
 
     uint256 private _nonce;
     bytes32 private _hash;
@@ -43,8 +43,8 @@ contract ERC5050Sender is Controllable, IERC5050Sender {
         return actionHash == _hash && nonce == _nonce;
     }
 
-    function sendableActions() external view returns (bytes4[] memory) {
-        return _sendableActions.values();
+    function sendableActions() external view returns (string[] memory) {
+        return _sendableActions.names();
     }
 
     modifier onlySendableAction(Action memory action) {
@@ -181,7 +181,7 @@ contract ERC5050Sender is Controllable, IERC5050Sender {
             getApprovedForAction(account, action) == msg.sender);
     }
 
-    function _registerSendable(bytes4 action) internal {
+    function _registerSendable(string memory action) internal {
         _sendableActions.add(action);
     }
 }

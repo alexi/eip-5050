@@ -12,13 +12,13 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IERC5050Sender, IERC5050Receiver, Action} from "../interfaces/IERC5050.sol";
 import "../common/Controllable.sol";
-import "../common/EnumerableBytes4Set.sol";
+import "../common/ActionsSet.sol";
 
 contract ERC5050Receiver is Controllable, IERC5050Receiver {
     using Address for address;
-    using EnumerableBytes4Set for EnumerableBytes4Set.Set;
+    using ActionsSet for ActionsSet.Set;
 
-    EnumerableBytes4Set.Set _receivableActions;
+    ActionsSet.Set _receivableActions;
 
     modifier onlyReceivableAction(Action calldata action, uint256 nonce) {
         if (_isApprovedController(msg.sender, action.selector)) {
@@ -45,8 +45,8 @@ contract ERC5050Receiver is Controllable, IERC5050Receiver {
         _;
     }
 
-    function receivableActions() external view returns (bytes4[] memory) {
-        return _receivableActions.values();
+    function receivableActions() external view returns (string[] memory) {
+        return _receivableActions.names();
     }
 
     function onActionReceived(Action calldata action, uint256 nonce)
@@ -93,7 +93,7 @@ contract ERC5050Receiver is Controllable, IERC5050Receiver {
         );
     }
 
-    function _registerReceivable(bytes4 action) internal {
+    function _registerReceivable(string memory action) internal {
         _receivableActions.add(action);
     }
 }

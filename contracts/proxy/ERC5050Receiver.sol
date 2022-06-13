@@ -13,7 +13,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC5050Sender, IERC5050Receiver, Action} from "../interfaces/IERC5050.sol";
 import "../common/Controllable.sol";
-import "../common/EnumerableBytes4Set.sol";
+import "../common/ActionsSet.sol";
 import {ProxyClient} from "./ProxyClient.sol";
 
 contract ERC5050Receiver is
@@ -23,9 +23,9 @@ contract ERC5050Receiver is
     Ownable
 {
     using Address for address;
-    using EnumerableBytes4Set for EnumerableBytes4Set.Set;
+    using ActionsSet for ActionsSet.Set;
 
-    EnumerableBytes4Set.Set private _receivableActions;
+    ActionsSet.Set private _receivableActions;
 
     function setProxyRegistry(address registry) external virtual onlyOwner {
         _setProxyRegistry(registry);
@@ -58,8 +58,8 @@ contract ERC5050Receiver is
         _;
     }
 
-    function receivableActions() external view returns (bytes4[] memory) {
-        return _receivableActions.values();
+    function receivableActions() external view returns (string[] memory) {
+        return _receivableActions.names();
     }
 
     function onActionReceived(Action calldata action, uint256 nonce)
@@ -106,7 +106,7 @@ contract ERC5050Receiver is
         );
     }
 
-    function _registerReceivable(bytes4 action) internal {
+    function _registerReceivable(string memory action) internal {
         _receivableActions.add(action);
     }
 }

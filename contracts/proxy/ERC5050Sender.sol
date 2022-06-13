@@ -13,14 +13,14 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC5050Sender, IERC5050Receiver, Action} from "../interfaces/IERC5050.sol";
 import "../common/Controllable.sol";
-import "../common/EnumerableBytes4Set.sol";
+import "../common/ActionsSet.sol";
 import {ProxyClient} from "./ProxyClient.sol";
 
 contract ERC5050Sender is Controllable, IERC5050Sender, ProxyClient, Ownable {
     using Address for address;
-    using EnumerableBytes4Set for EnumerableBytes4Set.Set;
+    using ActionsSet for ActionsSet.Set;
 
-    EnumerableBytes4Set.Set private _sendableActions;
+    ActionsSet.Set private _sendableActions;
 
     uint256 private _nonce;
     bytes32 private _hash;
@@ -49,8 +49,8 @@ contract ERC5050Sender is Controllable, IERC5050Sender, ProxyClient, Ownable {
         return actionHash == _hash && nonce == _nonce;
     }
 
-    function sendableActions() external view returns (bytes4[] memory) {
-        return _sendableActions.values();
+    function sendableActions() external view returns (string[] memory) {
+        return _sendableActions.names();
     }
 
     modifier onlySendableAction(Action memory action) {
@@ -192,7 +192,7 @@ contract ERC5050Sender is Controllable, IERC5050Sender, ProxyClient, Ownable {
             getApprovedForAction(account, action) == msg.sender);
     }
 
-    function _registerSendable(bytes4 action) internal {
+    function _registerSendable(string memory action) internal {
         _sendableActions.add(action);
     }
 }

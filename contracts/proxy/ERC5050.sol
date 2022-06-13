@@ -21,7 +21,7 @@ contract ERC5050 is ERC5050Sender, ERC5050Receiver {
         _setProxyRegistry(registry);
     }
 
-    function _registerAction(bytes4 action) internal {
+    function _registerAction(string memory action) internal {
         _registerReceivable(action);
         _registerSendable(action);
     }

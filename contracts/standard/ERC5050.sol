@@ -12,7 +12,7 @@ import "./ERC5050Sender.sol";
 import "./ERC5050Receiver.sol";
 
 contract ERC5050 is ERC5050Sender, ERC5050Receiver {
-    function _registerAction(bytes4 action) internal {
+    function _registerAction(string memory action) internal {
         _registerReceivable(action);
         _registerSendable(action);
     }
