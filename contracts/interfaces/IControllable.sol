@@ -9,15 +9,23 @@ pragma solidity ^0.8.0;
 /**********************************************************/
 
 interface IControllable {
-    function approveController(address sender, bytes4 action)
-        external
-        returns (bool);
+    event ControllerApproval(
+        address indexed _controller,
+        bytes4 indexed _action
+    );
+    
+    event ControllerApprovalForAll(
+        address indexed _controller,
+        bool _approved
+    );
+    
+    function approveController(address _controller, bytes4 _action)
+        external;
 
-    function revokeController(address sender, bytes4 action)
-        external
-        returns (bool);
+    function setControllerApprovalForAll(address _controller, bool _approved)
+        external;
 
-    function isApprovedController(address sender, bytes4 action)
+    function isApprovedController(address _controller, bytes4 _action)
         external
         view
         returns (bool);

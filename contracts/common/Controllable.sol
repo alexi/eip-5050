@@ -11,45 +11,47 @@ pragma solidity ^0.8.0;
 import "../interfaces/IControllable.sol";
 
 contract Controllable is IControllable {
-    mapping(address => mapping(bytes4 => bool)) private _approvedControllers;
+    mapping(address => mapping(bytes4 => bool)) private _actionControllers;
+    mapping(address => bool) private _universalControllers;
 
-    function approveController(address sender, bytes4 action)
+    function approveController(address _controller, bytes4 _action)
         external
         virtual
-        returns (bool)
     {
-        _approvedControllers[sender][action] = true;
-        return true;
+        _actionControllers[_controller][_action] = true;
+        emit ControllerApproval(
+            _controller,
+            _action
+        );
     }
-
-    function revokeController(address sender, bytes4 action)
+    
+    function setControllerApprovalForAll(address _controller, bool _approved)
         external
         virtual
-        returns (bool)
     {
-        delete _approvedControllers[sender][action];
-        return true;
+        _universalControllers[_controller] = _approved;
+        emit ControllerApprovalForAll(
+            _controller,
+            _approved
+        );
     }
 
-    function isApprovedController(address sender, bytes4 action)
+    function isApprovedController(address _controller, bytes4 _action)
         external
         view
         returns (bool)
     {
-        return _isApprovedController(sender, action);
+        return _isApprovedController(_controller, _action);
     }
 
-    function _isApprovedController(address sender, bytes4 action)
+    function _isApprovedController(address _controller, bytes4 _action)
         internal
         view
         returns (bool)
     {
-        if (_approvedControllers[sender][action]) {
+        if (_universalControllers[_controller]) {
             return true;
         }
-        if (_approvedControllers[sender][""]) {
-            return true;
-        }
-        return false;
+        return _actionControllers[_controller][_action];
     }
 }
