@@ -238,15 +238,23 @@ Contracts that support Controllers SHOULD ignore require/revert statements relat
 pragma solidity ^0.8.0;
 
 interface IControllable {
-    function approveController(address sender, string memory action)
-        external
-        returns (bool);
+    event ControllerApproval(
+        address indexed _controller,
+        bytes4 indexed _action
+    );
+    
+    event ControllerApprovalForAll(
+        address indexed _controller,
+        bool _approved
+    );
+    
+    function approveController(address _controller, bytes4 _action)
+        external;
 
-    function revokeController(address sender, string memory action)
-        external
-        returns (bool);
+    function setControllerApprovalForAll(address _controller, bool _approved)
+        external;
 
-    function isApprovedController(address sender, string memory action)
+    function isApprovedController(address _controller, bytes4 _action)
         external
         view
         returns (bool);
