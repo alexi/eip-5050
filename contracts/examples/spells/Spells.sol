@@ -25,8 +25,8 @@ contract Spells is ERC5050, ERC721, Ownable {
     mapping(uint256 => string) attunement;
 
     constructor() ERC721("Spells", unicode"🔮") {
-        _registerSendable(CAST_SELECTOR);
-        _registerReceivable(ATTUNE_SELECTOR);
+        _registerSendable("cast");
+        _registerReceivable("attune");
     }
 
     function sendAction(Action memory action)
